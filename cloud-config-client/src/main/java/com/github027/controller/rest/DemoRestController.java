@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DemoRestController {
 
-//	@Value("${lucky-name}")
+	@Value("${lucky-name}")
 	private String luckyName;
 
 	@RequestMapping("/lucky-name")
