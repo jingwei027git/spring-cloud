@@ -2,13 +2,16 @@ package com.github027.controller;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@RefreshScope
 @RestController
 public class ComputeController {
 
@@ -24,5 +27,13 @@ public class ComputeController {
         logger.info("/add, host:" + instance.getHost() + ", service_id:" + instance.getServiceId() + ", result:" + r);
         return r;
     }
+
+	@Value("${lucky-name}")
+	private String luckyName;
+
+	@RequestMapping("/lucky-name")
+	public String showLuckyWord() {
+		return "The lucky name is: " + luckyName;
+	}
 
 }
