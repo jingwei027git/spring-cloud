@@ -1,4 +1,4 @@
-package com.github027.domain.test;
+package com.github027.app.test.domain;
 
 import java.time.LocalDateTime;
 
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github027.domain.test.dto.TestDto;
+import com.github027.app.test.dto.TestDto;
 
 @RefreshScope
 @RequestMapping("/test")

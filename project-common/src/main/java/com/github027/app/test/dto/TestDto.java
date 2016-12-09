@@ -1,4 +1,4 @@
-package com.github027.domain.test.dto;
+package com.github027.app.test.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -16,6 +16,7 @@ public class TestDto implements Serializable {
 	private Integer serverPort;
 	private String code;
 	private String description;
+	private String sessionId;
 
 	private LocalDateTime createDate;
 	private String createUser;

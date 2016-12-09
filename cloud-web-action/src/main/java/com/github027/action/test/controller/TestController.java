@@ -3,7 +3,6 @@ package com.github027.action.test.controller;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.session.SessionRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,9 +24,6 @@ public class TestController {
 
 	@Autowired
 	private RestTemplate restTemplate;
-	
-	@Autowired
-	private SessionRepository<?> sessRepo;
 
 	@RequestMapping("/hello")
 	public String goHello(Model model) {
@@ -36,6 +32,7 @@ public class TestController {
 		model.addAttribute("sessionID", request.getSession().getId());
 		
 		log.info("HttpSession ID is {}", request.getSession().getId());
+		log.info("Key redis is {}", request.getSession().getAttribute("redis"));
 
 		return "hello";
 	}

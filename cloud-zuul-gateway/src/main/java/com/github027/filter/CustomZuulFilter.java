@@ -32,12 +32,10 @@ public class CustomZuulFilter extends ZuulFilter {
 	public Object run() {
 		final RequestContext context = RequestContext.getCurrentContext();
 		final HttpSession httpSession = context.getRequest().getSession();
-		log.info("HttpSession is {}", httpSession);
+		httpSession.setAttribute("redis", "great");
 		
-		if (httpSession != null) {
-			context.addZuulRequestHeader("Cookie", "SESSION=" + httpSession.getId());
-			log.info("HttpSession ID is {}", httpSession.getId());
-		}
+		context.addZuulRequestHeader("Cookie", "SESSION=" + httpSession.getId());
+		log.info("HttpSession ID is {}", httpSession.getId());
 
         return null;
 	}	
