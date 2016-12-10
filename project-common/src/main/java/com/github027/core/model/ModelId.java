@@ -9,16 +9,17 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * include {id}
- * <p>
- * <p>
+ * Model with unique id
+ * 
  */
 @Getter
 @Setter
 @MappedSuperclass
 @SuppressWarnings("serial")
-public abstract class ModelBase implements Model {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+public abstract class ModelId implements Model {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
 }

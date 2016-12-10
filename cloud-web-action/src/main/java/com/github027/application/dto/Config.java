@@ -1,4 +1,4 @@
-package com.github027.config;
+package com.github027.application.dto;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

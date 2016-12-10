@@ -2,9 +2,12 @@ package com.github027.core.model;
 
 import java.io.Serializable;
 
-@FunctionalInterface
+/**
+ * Model prototype
+ *
+ */
 public interface Model extends Serializable {
 
-    public Long getId();
+	public Long getId();
 
 }
