@@ -14,8 +14,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @MappedSuperclass
-@SuppressWarnings("serial")
 public abstract class ModelIdAudit extends ModelId {
+	private static final long serialVersionUID = 1L;
 
 	private String createUser;
 

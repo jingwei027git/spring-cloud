@@ -1,4 +1,4 @@
-package com.github027.application.dto;
+package com.github027.application.property;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @Component
 public class Config {
-
+	
 	@Value("${spring.datasource.driverClassName}")
 	private String datasourceDriverClassName;
 
@@ -25,5 +25,17 @@ public class Config {
 
 	@Value("${spring.cloud.config.profile}")
 	private String cloudConfigProfile;
-
+	
+	@Value("${spring.rabbitmq.host}")
+	private String rabbitmqHost;
+	
+	@Value("${spring.rabbitmq.port}")
+	private String rabbitmqPort;
+	
+	@Value("${spring.rabbitmq.username}")
+	private String rabbitmqUsername;
+	
+	@Value("${spring.rabbitmq.password}")
+	private String rabbitmqPassword;
+	
 }

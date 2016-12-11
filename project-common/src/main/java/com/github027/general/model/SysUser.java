@@ -5,13 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -32,11 +28,11 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString(exclude = { "password", "roles" })
+@ToString(exclude = { "description", "password" })
 @Entity
 @Table(name = "sys_user")
-@SuppressWarnings("serial")
 public class SysUser extends ModelIdAudit implements UserDetails {
+	private static final long serialVersionUID = 1L;
 
 	@Enumerated(EnumType.STRING)
 	private YesNo sysStatus;
@@ -51,23 +47,19 @@ public class SysUser extends ModelIdAudit implements UserDetails {
 
 	private String description;
 
-	@Enumerated(EnumType.STRING)
-	private YesNo lockStatus;
-
 	@JsonIgnore
 	private String password;
 
 	private LocalDateTime expireTime;
 
-	@JsonIgnore
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "sys_user_role", joinColumns = { @JoinColumn(name = "user_id", referencedColumnName = "id") }, inverseJoinColumns = {
-			@JoinColumn(name = "role_id", referencedColumnName = "id") })
-	private List<SysRole> roles;
+//	@JsonIgnore
+//	@ManyToMany(cascade = CascadeType.ALL)
+//	@JoinTable(name = "sys_user_role", joinColumns = { @JoinColumn(name = "user_id", referencedColumnName = "id") }, inverseJoinColumns = {
+//			@JoinColumn(name = "role_id", referencedColumnName = "id") })
+//	private List<SysRole> roles;
 
 	public SysUser() {
 		sysStatus = YesNo.Y;
-		lockStatus = YesNo.N;
 	}
 
 	@JsonIgnore
@@ -85,7 +77,7 @@ public class SysUser extends ModelIdAudit implements UserDetails {
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return YesNo.N == getLockStatus();
+		return YesNo.Y == getSysStatus();
 	}
 
 	@Override

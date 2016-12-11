@@ -8,7 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
-import com.github027.application.dto.Config;
+import com.github027.application.property.Config;
 
 import lombok.extern.slf4j.Slf4j;
 

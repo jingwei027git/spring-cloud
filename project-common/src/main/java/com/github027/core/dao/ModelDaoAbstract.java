@@ -7,6 +7,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.NoRepositoryBean;
 
 import com.github027.core.exception.NotSupportException;
 
@@ -19,6 +20,7 @@ import com.github027.core.exception.NotSupportException;
  * @param <T>
  * @param <ID>
  */
+@NoRepositoryBean
 public abstract class ModelDaoAbstract<T, ID extends Serializable> implements ModelDao<T, ID> {
 
 	@Override
