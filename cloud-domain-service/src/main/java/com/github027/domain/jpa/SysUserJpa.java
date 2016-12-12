@@ -1,11 +1,11 @@
-package com.github027.general.jpa;
+package com.github027.domain.jpa;
 
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
 import com.github027.core.jpa.ModelJpa;
-import com.github027.general.model.SysUser;
+import com.github027.domain.model.SysUser;
 
 @Repository
 public interface SysUserJpa extends ModelJpa<SysUser, Long> {

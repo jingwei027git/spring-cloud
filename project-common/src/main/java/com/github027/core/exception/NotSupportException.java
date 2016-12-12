@@ -7,4 +7,12 @@ package com.github027.core.exception;
 @SuppressWarnings("serial")
 public class NotSupportException extends RuntimeException {
 
+	public NotSupportException() {
+        super();
+    }
+	
+    public NotSupportException(String message) {
+        super(message);
+    }
+
 }

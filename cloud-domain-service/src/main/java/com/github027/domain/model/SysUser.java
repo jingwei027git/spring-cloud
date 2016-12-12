@@ -1,4 +1,4 @@
-package com.github027.general.model;
+package com.github027.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

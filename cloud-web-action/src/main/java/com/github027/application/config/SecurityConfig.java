@@ -15,7 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.github027.general.service.SysUserService;
+import com.github027.domain.service.SysUserService;
 
 @Configuration
 @EnableWebSecurity
@@ -37,13 +37,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(final HttpSecurity http) throws Exception {
-		http.authorizeRequests()
-			.antMatchers("**/hello").permitAll()
-			.anyRequest().authenticated()
-			.and()
-			.formLogin().loginPage("/login").permitAll()
-			.and()
-			.logout().permitAll();
+		http
+        .authorizeRequests()
+            .antMatchers("/", "/home").permitAll()
+            .anyRequest().authenticated()
+            .and()
+        .formLogin()
+            .loginPage("/login")
+            .permitAll()
+            .and()
+        .logout()
+            .permitAll();
 	}
 
 	@Bean

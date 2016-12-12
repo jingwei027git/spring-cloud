@@ -1,4 +1,4 @@
-package com.github027.general.service.impl;
+package com.github027.domain.service.impl;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.github027.general.dao.SysUserDao;
-import com.github027.general.jpa.SysUserJpa;
-import com.github027.general.model.SysUser;
-import com.github027.general.service.SysUserService;
-import com.github027.general.util._Iter;
+import com.github027.domain.dao.SysUserDao;
+import com.github027.domain.jpa.SysUserJpa;
+import com.github027.domain.model.SysUser;
+import com.github027.domain.service.SysUserService;
+import com.github027.util._Iter;
 
 @Service("SysUserService")
 public class SysUserServiceImpl implements SysUserService {

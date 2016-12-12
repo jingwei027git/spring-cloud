@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 @EnableRedisHttpSession
 @EnableDiscoveryClient
-@EntityScan(basePackages = { "com.github027.general.model" }, basePackageClasses = { Jsr310JpaConverters.class })
+@EntityScan(basePackages = { "com.github027.domain.model" }, basePackageClasses = { Jsr310JpaConverters.class })
 @SpringBootApplication
 public class WebActionApplication {
 	

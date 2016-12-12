@@ -1,4 +1,4 @@
-package com.github027.general.model;
+package com.github027.domain.model;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

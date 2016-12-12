@@ -5,6 +5,7 @@ import java.io.Serializable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
+import com.github027.core.exception.NotSupportException;
 import com.github027.core.jpa.ModelJpa;
 
 /**
@@ -16,6 +17,8 @@ import com.github027.core.jpa.ModelJpa;
 @NoRepositoryBean
 public interface ModelDao<T, ID extends Serializable> extends JpaRepository<T, ID> {
 	
-	public ModelJpa<T, ID> getJpaRepository();
+	default public ModelJpa<T, ID> getJpaRepository() {
+		throw new NotSupportException("jpa repository not assign");
+	}
 
 }

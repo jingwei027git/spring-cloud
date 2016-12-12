@@ -1,10 +1,11 @@
-package com.github027.general.util;
+package com.github027.util;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import com.github027.core.enums.YesNo;
+import com.github027.util._Str;
 
 public class _StrTest {
 

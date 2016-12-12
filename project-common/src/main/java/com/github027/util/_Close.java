@@ -1,4 +1,4 @@
-package com.github027.general.util;
+package com.github027.util;
 
 import java.util.function.Consumer;
 
