@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
 import com.github027.application.property.Config;
+import com.github027.web.ViewPath;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,12 +38,12 @@ public class TestAction {
 		return "hello";
 	}
 
-	@RequestMapping("/loadBalance")
+	@RequestMapping("/main")
 	public String goLoadBalance(Model model) {
-		Integer serverPort = restTemplate.getForEntity("http://DOMAIN-SERVICE/test/serverPort", Integer.class).getBody();
-		model.addAttribute("serverPort", serverPort);
+		model.addAttribute("name", "This is from request");
+		model.addAttribute("content", ViewPath.dashboard.with("/content"));
 
-		return "hello";
+		return ViewPath.mainLayout.getPath();
 	}
 
 }

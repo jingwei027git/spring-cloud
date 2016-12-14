@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>SB Admin 2 - Bootstrap Admin Theme</title>
+
+	<link th:href="@{/assets/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet" />
+	<link th:href="@{/assets/metisMenu/dist/metisMenu.min.css}" rel="stylesheet" />
+	<link th:href="@{/assets/metisMenu/dist/metisMenu.min.css}" rel="stylesheet" />
+	<link th:href="@{/assets/morrisjs/morris.min.js}" rel="stylesheet" />
+	<link th:href="@{/assets/font-awesome/css/font-awesome.min.css}" rel="stylesheet" />
+	<link th:href="@{/resources/css/sb-admin-2.css}" rel="stylesheet" />
+</head>
+
+<body>
+	<div id="wrapper">
+		<div th:replace="app/layout/navigation :: navigation">Navigation</div>
+		<div id="page-wrapper" th:include="@{${content}} :: content">Content</div>
+	</div>
+	<!-- /#wrapper -->
+
+	<script type="text/javascript" th:src="@{/assets/jquery/dist/jquery.min.js}"></script>
+	<script type="text/javascript" th:src="@{/assets/bootstrap/dist/js/bootstrap.min.js}"></script>
+	<script type="text/javascript" th:src="@{/assets/metisMenu/dist/metisMenu.min.js}"></script>
+	<script type="text/javascript" th:src="@{/resources/js/sb-admin-2.js}"></script>
+</body>
+
+</html>

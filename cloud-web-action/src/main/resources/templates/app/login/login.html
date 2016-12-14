@@ -29,6 +29,11 @@
                             <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
 							<input type="password" id="password" name="password" class="form-control" placeholder="Password" />
                         </div>
+						<div class="form-group">
+							<div class="input-group-addon alert alert-warning" th:if="${session[SPRING_SECURITY_LAST_EXCEPTION] != null and session[SPRING_SECURITY_LAST_EXCEPTION].message != null}">
+								<span>Invalid credentials</span>
+							</div>
+						</div>
                         <div class="form-group">
                             <div class="col-sm-12 controls">
 								<button type="submit" class="btn btn-primary pull-right"><i class="glyphicon glyphicon-log-in"></i> Log in</button>
