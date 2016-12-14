@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.github027.domain.service.SysUserService;
 
@@ -29,32 +28,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		auth.userDetailsService(sysUserService);
 
 		final DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-		daoAuthenticationProvider.setUserDetailsService(userDetailsServiceBean());
+		daoAuthenticationProvider.setUserDetailsService(sysUserService);
+		daoAuthenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
 		daoAuthenticationProvider.setPreAuthenticationChecks(userDetailsChecker());
 		auth.authenticationProvider(daoAuthenticationProvider);
 	}
 
 	@Override
 	protected void configure(final HttpSecurity http) throws Exception {
-		http
-        .authorizeRequests()
-            .antMatchers("/", "/home").permitAll()
+		http.csrf().disable()
+        	.authorizeRequests()
+            .antMatchers("/resources/**", "/assets/**").permitAll()
+            .antMatchers("/admin/**").hasRole("ADMIN")
+            .antMatchers("/db/**").access("hasRole('ADMIN') and hasRole('DBA')")
+            .antMatchers("/**").hasRole("USER")
             .anyRequest().authenticated()
-            .and()
-        .formLogin()
-            .loginPage("/login")
+        .and()
+        	.formLogin()
+            .loginPage("/login").defaultSuccessUrl("/main")
             .permitAll()
-            .and()
-        .logout()
+        .and()
+        	.logout()
             .permitAll();
 	}
 
-	@Bean
-	protected PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-	
 	@Bean
 	protected UserDetailsChecker userDetailsChecker() {
 		return userDetails -> {
