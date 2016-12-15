@@ -9,7 +9,7 @@ public class _Str {
 	/**
 	 * append all objects(.toString()) into string buffer (null object will be
 	 * ignore)
-	 * 
+	 *
 	 * @param strs
 	 * @return
 	 */
@@ -36,7 +36,7 @@ public class _Str {
 	 * 3. " " is blank <br>
 	 * 4. "   " is blank (any number white spaces) <br>
 	 * <p>
-	 * 
+	 *
 	 * @param str
 	 * @return
 	 */
@@ -51,7 +51,7 @@ public class _Str {
 	 * 2. "" is blank <br>
 	 * 3. " " is NOT blank <br>
 	 * <p>
-	 * 
+	 *
 	 * @param str
 	 * @return
 	 */
@@ -64,7 +64,7 @@ public class _Str {
 	 * <p>
 	 * only support range Long.MIN_VALUE ~ Long.MAX_VALUE <br>
 	 * <p>
-	 * 
+	 *
 	 * @param sNumber
 	 * @return
 	 */
@@ -86,7 +86,7 @@ public class _Str {
 	 * <p>
 	 * if string is null then return 0
 	 * <p>
-	 * 
+	 *
 	 * @param str
 	 * @return
 	 */
@@ -99,12 +99,16 @@ public class _Str {
 	 * <p>
 	 * if string is null then return ""
 	 * <p>
-	 * 
+	 *
 	 * @param str
 	 * @return
 	 */
 	public static String trim(final String str) {
 		return (str == null) ? "" : str.trim();
+	}
+
+	public static String trimToNull(final String str) {
+		return "".equals(trim(str)) ? null : trim(str);
 	}
 
 }

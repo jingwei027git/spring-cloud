@@ -1,7 +1,5 @@
 package com.github027.core.model;
 
-import static com.github027.util._Str.isBlank;
-
 import java.time.LocalDateTime;
 
 import javax.persistence.MappedSuperclass;
@@ -10,22 +8,18 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Model with unique id and audit fields
+ * Model with unique id and audit fields (only create)
  *
  */
 @Getter
 @Setter
 @MappedSuperclass
-public abstract class ModelIdAudit extends ModelId {
+public abstract class ModelIdAuditCreate extends ModelId {
 	private static final long serialVersionUID = 1L;
 
 	private String createUser;
 
 	private LocalDateTime createTime;
-
-	private String modifyUser;
-
-	private LocalDateTime modifyTime;
 
 	/**
 	 * initial audit fields
@@ -36,18 +30,11 @@ public abstract class ModelIdAudit extends ModelId {
 	 *
 	 * @param user
 	 */
-	public void initAudit(final String username) {
+	public void initAudit(final String user) {
 		final LocalDateTime dateTime = LocalDateTime.now();
 
-		if (!isBlank(username)) {
-			setModifyUser(username);
-		}
-		setModifyTime(dateTime);
-
 		if (getId() == null) {
-			if (!isBlank(username)) {
-				setCreateUser(username);
-			}
+			setCreateUser(user);
 			setCreateTime(dateTime);
 		}
 	}

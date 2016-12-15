@@ -1,4 +1,4 @@
-package com.github027.domain.service;
+package com.github027.app.profile.user.service;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
 

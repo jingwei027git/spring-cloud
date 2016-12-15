@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 @EntityScan(basePackages = { "com.github027.domain.model" }, basePackageClasses = { Jsr310JpaConverters.class })
 @SpringBootApplication
 public class WebActionApplication {
-	
+
 	@LoadBalanced
 	@Bean
 	RestTemplate restTemplate() {
@@ -25,5 +25,5 @@ public class WebActionApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(WebActionApplication.class, args);
 	}
-	
+
 }
