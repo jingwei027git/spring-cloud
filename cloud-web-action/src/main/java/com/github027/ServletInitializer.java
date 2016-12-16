@@ -4,7 +4,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 
 /**
- * Tomcat launch entry-point
+ * TOMCAT launch entry-point
  *
  */
 public class ServletInitializer extends SpringBootServletInitializer {

@@ -1,5 +1,7 @@
 package com.github027.app.queue.core.service.impl;
 
+import static com.github027.util._Str.trimToNull;
+
 import java.time.LocalDateTime;
 
 import javax.annotation.Resource;
@@ -32,6 +34,13 @@ public class QueueProducerImpl implements QueueProducer {
 
 		saveLog(category, dto);
 		produce(category, dto);
+	}
+
+	@Override
+	public void sendNative(String queueName, Object object) {
+		Preconditions.checkNotNull(trimToNull(queueName));
+
+		rabbitTemplate.convertAndSend(queueName, object);
 	}
 
 	private void saveLog(final SysQueueLogCategory category, final BaseQueueDto dto) {

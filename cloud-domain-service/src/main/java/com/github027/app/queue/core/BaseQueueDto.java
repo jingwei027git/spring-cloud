@@ -8,7 +8,9 @@ import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
+@ToString
 @SuppressWarnings("serial")
 public class BaseQueueDto implements Serializable {
 

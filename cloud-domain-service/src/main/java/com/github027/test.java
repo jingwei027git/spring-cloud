@@ -1,17 +1,18 @@
 package com.github027;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import com.github027.app.queue.email.EmailReceiverDto;
+import com.github027.domain.model.SysUser;
 
 public class test {
 
 	public static void main(String[] args) {
-		EmailReceiverDto dto = new EmailReceiverDto("system");
+		SysUser sysUser = new SysUser();
+		sysUser.setId(100L);
+		sysUser.setCreateUser("jeff");
+		sysUser.setCreateTime(LocalDateTime.now());
 
-		System.out.println(LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)+ ":" + UUID.randomUUID().toString());
+		System.out.println(sysUser);
 	}
 
 }

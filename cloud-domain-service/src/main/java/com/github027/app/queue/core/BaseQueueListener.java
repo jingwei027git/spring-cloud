@@ -13,6 +13,7 @@ public abstract class BaseQueueListener {
 
 	@Bean
 	SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
+		System.out.println(connectionFactory.getVirtualHost());
 		SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
 		container.setConnectionFactory(connectionFactory);
 		container.setQueueNames(provideCategory().getQueueName());

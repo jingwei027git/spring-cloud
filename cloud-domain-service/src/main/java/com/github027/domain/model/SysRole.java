@@ -14,7 +14,7 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@ToString(exclude = { "description" })
+@ToString(callSuper = true, exclude = { "description" })
 @Entity
 @Table(name = "sys_role")
 public class SysRole extends ModelIdAudit {

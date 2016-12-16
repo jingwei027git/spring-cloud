@@ -10,6 +10,11 @@ public class EmailReceiver extends BaseQueueReceiver<EmailReceiverDto> {
 	@Override
 	public void receive(final EmailReceiverDto email) {
         System.out.println("Received <" + email + ">");
+        try {
+			Thread.sleep(5000L);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     }
 
 }

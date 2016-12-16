@@ -24,11 +24,11 @@ import lombok.ToString;
 
 /**
  * System user model with Spring Security
- * 
+ *
  */
 @Getter
 @Setter
-@ToString(exclude = { "description", "password" })
+@ToString(callSuper = true, exclude = { "description", "password" })
 @Entity
 @Table(name = "sys_user")
 public class SysUser extends ModelIdAudit implements UserDetails {

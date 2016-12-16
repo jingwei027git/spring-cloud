@@ -8,6 +8,7 @@ import javax.persistence.MappedSuperclass;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Model with unique id and audit fields
@@ -15,6 +16,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ToString(callSuper = true)
 @MappedSuperclass
 public abstract class ModelIdAudit extends ModelId {
 	private static final long serialVersionUID = 1L;

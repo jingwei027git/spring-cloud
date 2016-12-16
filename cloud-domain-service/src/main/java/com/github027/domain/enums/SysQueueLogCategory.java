@@ -3,8 +3,8 @@ package com.github027.domain.enums;
 import lombok.Getter;
 
 public enum SysQueueLogCategory {
-
-	EMAIL("emailQueue");
+	SMOKING("smokingQueue"),
+	EMAIL("emailQueue"),;
 
 	@Getter
 	private String queueName;

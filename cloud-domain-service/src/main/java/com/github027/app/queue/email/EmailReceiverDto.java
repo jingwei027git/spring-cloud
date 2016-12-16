@@ -12,7 +12,7 @@ import lombok.ToString;
 @SuppressWarnings("serial")
 @Getter
 @Setter
-@ToString(exclude = { "context", "attachments" }, callSuper = true)
+@ToString(callSuper = true, exclude = { "context", "attachments" })
 public class EmailReceiverDto extends BaseQueueDto {
 
 	private String fromAlias;

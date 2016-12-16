@@ -7,4 +7,6 @@ public interface QueueProducer {
 
 	public void send(SysQueueLogCategory category, BaseQueueDto dto);
 
+	public void sendNative(String queueName, Object object);
+
 }
