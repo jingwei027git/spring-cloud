@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github027.core.enums.YesNo;
 import com.github027.core.model.ModelIdAudit;
+import com.github027.util._Sys;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -72,7 +73,7 @@ public class SysUser extends ModelIdAudit implements UserDetails {
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return expireTime == null || expireTime.isAfter(LocalDateTime.now());
+		return expireTime == null || expireTime.isAfter(_Sys.now());
 	}
 
 	@Override

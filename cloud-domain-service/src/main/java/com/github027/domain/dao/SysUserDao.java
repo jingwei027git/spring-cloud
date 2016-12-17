@@ -7,6 +7,6 @@ import com.github027.domain.model.SysUser;
 public interface SysUserDao extends ModelDao<SysUser, Long> {
 
 	@Override
-	public SysUserJpa getJpaRepository();
+	public SysUserJpa getJpa();
 
 }

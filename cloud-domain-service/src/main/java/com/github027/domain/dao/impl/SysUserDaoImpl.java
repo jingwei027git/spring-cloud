@@ -15,6 +15,6 @@ public class SysUserDaoImpl extends ModelDaoImpl<SysUser, Long> implements SysUs
 	
 	@Getter
 	@Autowired
-	private SysUserJpa jpaRepository;
+	private SysUserJpa jpa;
 
 }

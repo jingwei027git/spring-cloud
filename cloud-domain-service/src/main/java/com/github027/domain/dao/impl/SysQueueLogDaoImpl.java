@@ -15,6 +15,6 @@ public class SysQueueLogDaoImpl extends ModelDaoImpl<SysQueueLog, Long> implemen
 
 	@Getter
 	@Autowired
-	private SysQueueLogJpa jpaRepository;
+	private SysQueueLogJpa jpa;
 
 }

@@ -7,6 +7,6 @@ import com.github027.domain.model.SysQueueLog;
 public interface SysQueueLogDao extends ModelDao<SysQueueLog, Long> {
 
 	@Override
-	public SysQueueLogJpa getJpaRepository();
+	public SysQueueLogJpa getJpa();
 
 }

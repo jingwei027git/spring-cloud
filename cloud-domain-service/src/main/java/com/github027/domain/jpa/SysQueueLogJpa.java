@@ -1,18 +1,13 @@
 package com.github027.domain.jpa;
 
-import java.util.List;
-
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github027.core.jpa.ModelJpa;
-import com.github027.domain.enums.SysQueueLogCategory;
 import com.github027.domain.model.SysQueueLog;
 
+@Transactional
 @Repository
 public interface SysQueueLogJpa extends ModelJpa<SysQueueLog, Long> {
-
-	public List<SysQueueLog> findByCategory(SysQueueLogCategory logCategory);
-
-	public SysQueueLog findByUuid(String uuid);
 
 }

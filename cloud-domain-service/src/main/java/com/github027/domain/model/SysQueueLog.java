@@ -8,7 +8,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
 import com.github027.core.model.ModelIdAudit;
-import com.github027.domain.enums.SysQueueLogCategory;
+import com.github027.domain.consts.AmqpConst;
 import com.github027.domain.enums.SysQueueLogStatus;
 
 import lombok.Getter;
@@ -27,13 +27,8 @@ import lombok.ToString;
 @Table(name = "sys_queue_log")
 public class SysQueueLog extends ModelIdAudit {
 
-	private String uuid;
-
 	@Enumerated(EnumType.STRING)
-	private SysQueueLogStatus status;
-
-	@Enumerated(EnumType.STRING)
-	private SysQueueLogCategory category;
+	private AmqpConst.Category category;
 
 	private LocalDateTime sendTime;		// this time is baseQueueDto is ready and prepare to send
 
@@ -41,6 +36,9 @@ public class SysQueueLog extends ModelIdAudit {
 
 	private LocalDateTime finishTime;	// this time is baseQueueReceiver receive and process done (include failure case)
 
-	private String comment;
+	@Enumerated(EnumType.STRING)
+	private SysQueueLogStatus status;
+
+	private String statusMessage;
 
 }

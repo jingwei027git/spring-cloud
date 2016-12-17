@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import javax.persistence.MappedSuperclass;
 
+import com.github027.util._Sys;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -39,7 +41,7 @@ public abstract class ModelIdAudit extends ModelId {
 	 * @param user
 	 */
 	public void initAudit(final String username) {
-		final LocalDateTime dateTime = LocalDateTime.now();
+		final LocalDateTime dateTime = _Sys.now();
 
 		if (!isBlank(username)) {
 			setModifyUser(username);
