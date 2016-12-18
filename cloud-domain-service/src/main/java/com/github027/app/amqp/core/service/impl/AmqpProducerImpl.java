@@ -1,5 +1,7 @@
 package com.github027.app.amqp.core.service.impl;
 
+import static com.github027.util._Str.trimToNull;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +25,12 @@ public class AmqpProducerImpl implements AmqpProducer {
 	@Autowired
 	private SysQueueLogDao sysQueueLogDao;
 
+
 	@Override
 	public void send(final AmqpConst.Category category, final BaseAmqpDto dto) {
 		Preconditions.checkNotNull(category);
+		Preconditions.checkNotNull(dto);
+		Preconditions.checkNotNull(trimToNull(dto.getUsername()));
 
 		saveLogWithInitialStatus(category, dto);
 		send(category.getExchange(), category.getRoutingKey(), dto);

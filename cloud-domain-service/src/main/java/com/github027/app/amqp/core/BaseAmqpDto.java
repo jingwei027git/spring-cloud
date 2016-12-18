@@ -7,28 +7,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@Getter
+@Setter
 @ToString
 @SuppressWarnings("serial")
 public class BaseAmqpDto implements Serializable {
 
-	@Getter
-	@Setter
 	private Long sysQueueLogId;
-
-	@Getter
-	@Setter
 	private String username;
-
-	@Getter
-	@Setter
 	private LocalDateTime sendTime;
-
-	@Getter
-	@Setter
 	private LocalDateTime recvTime;
-
-	@Getter
-	@Setter
 	private LocalDateTime finishTime;
 
 }

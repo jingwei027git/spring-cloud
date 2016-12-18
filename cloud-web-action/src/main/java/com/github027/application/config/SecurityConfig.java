@@ -39,9 +39,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         	.authorizeRequests()
         	.antMatchers("/dump", "/env", "/bus/env", "/heapdump", "/metrics", "/info", "/health", "/features", "/mappings", "/trace").permitAll() // actuator
             .antMatchers("/resources/**", "/assets/**").permitAll()
-            .antMatchers("/test/**").permitAll()
-            .antMatchers("/admin/**").hasRole("ADMIN")
-            .antMatchers("/db/**").access("hasRole('ADMIN') and hasRole('DBA')")
+            .antMatchers("/admin/**").hasRole("ADMIN") // reserved
+            .antMatchers("/db/**").access("hasRole('ADMIN') and hasRole('DBA')") // reserved
             .antMatchers("/**").hasRole("USER")
             .anyRequest().authenticated()
         .and()
