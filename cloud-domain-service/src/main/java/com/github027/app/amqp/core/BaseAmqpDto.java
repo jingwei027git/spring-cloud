@@ -1,7 +1,5 @@
 package com.github027.app.amqp.core;
 
-import static com.github027.util._Str.trim;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -32,9 +30,5 @@ public class BaseAmqpDto implements Serializable {
 	@Getter
 	@Setter
 	private LocalDateTime finishTime;
-
-	public BaseAmqpDto(String username) {
-		this.username = trim(username);
-	}
 
 }

@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 
 public class _Sys {
 
+	public enum Username {
+		SYSTEM, TEST
+	}
+
 	public static LocalDateTime now() {
 		return LocalDateTime.now();
 	}

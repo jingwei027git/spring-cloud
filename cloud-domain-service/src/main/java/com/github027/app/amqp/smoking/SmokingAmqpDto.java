@@ -14,8 +14,4 @@ public class SmokingAmqpDto extends BaseAmqpDto {
 
 	private String message;
 
-	public SmokingAmqpDto(String createUser) {
-		super(createUser);
-	}
-
 }

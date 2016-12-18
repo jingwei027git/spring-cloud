@@ -24,8 +24,4 @@ public class EmailAmqpDto extends BaseAmqpDto {
 	private String context;
 	private List<File> attachments;
 
-	public EmailAmqpDto(String createUser) {
-		super(createUser);
-	}
-
 }
