@@ -1,4 +1,4 @@
-package com.github027.app.amqp.core.service.impl;
+package com.github027.core.amqp;
 
 import static com.github027.util._Str.trimToNull;
 
@@ -7,12 +7,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github027.app.amqp.core.BaseAmqpDto;
-import com.github027.app.amqp.core.service.AmqpProducer;
-import com.github027.domain.consts.AmqpConst;
 import com.github027.domain.dao.SysQueueLogDao;
-import com.github027.domain.enums.SysQueueLogStatus;
 import com.github027.domain.model.SysQueueLog;
+import com.github027.domain.model.consts.AmqpConst;
+import com.github027.domain.model.enums.SysQueueLogStatus;
 import com.github027.util._Sys;
 import com.google.common.base.Preconditions;
 

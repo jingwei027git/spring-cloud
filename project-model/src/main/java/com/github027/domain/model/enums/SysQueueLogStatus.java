@@ -1,4 +1,4 @@
-package com.github027.domain.enums;
+package com.github027.domain.model.enums;
 
 public enum SysQueueLogStatus {
 

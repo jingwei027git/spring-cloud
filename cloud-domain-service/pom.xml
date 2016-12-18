@@ -73,6 +73,11 @@
 			<artifactId>project-common</artifactId>
 			<version>0.0.1</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github027</groupId>
+			<artifactId>project-model</artifactId>
+			<version>0.0.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>mysql</groupId>

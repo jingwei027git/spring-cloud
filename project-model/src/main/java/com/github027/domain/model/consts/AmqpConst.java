@@ -1,4 +1,4 @@
-package com.github027.domain.consts;
+package com.github027.domain.model.consts;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -77,10 +77,6 @@
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity4</artifactId>
 		</dependency>
-        <dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
 		
 		<dependency>
 			<groupId>com.github027</groupId>
@@ -89,7 +85,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github027</groupId>
-			<artifactId>cloud-domain-service</artifactId>
+			<artifactId>project-model</artifactId>
 			<version>0.0.1</version>
 		</dependency>
 

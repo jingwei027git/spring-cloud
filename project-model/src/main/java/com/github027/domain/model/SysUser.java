@@ -14,7 +14,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github027.core.enums.YesNo;
 import com.github027.core.model.ModelIdAudit;
 import com.github027.util._Sys;
@@ -22,6 +21,7 @@ import com.github027.util._Sys;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.minidev.json.annotate.JsonIgnore;
 
 /**
  * System user model with Spring Security

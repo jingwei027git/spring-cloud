@@ -3,7 +3,7 @@ package com.github027.app.amqp.email;
 import java.io.File;
 import java.util.List;
 
-import com.github027.app.amqp.core.BaseAmqpDto;
+import com.github027.core.amqp.BaseAmqpDto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,12 +1,12 @@
-package com.github027.app.amqp.core;
+package com.github027.core.amqp;
 
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.github027.domain.dao.SysQueueLogDao;
-import com.github027.domain.enums.SysQueueLogStatus;
 import com.github027.domain.model.SysQueueLog;
+import com.github027.domain.model.enums.SysQueueLogStatus;
 import com.github027.util._Exp;
 import com.github027.util._Sys;
 

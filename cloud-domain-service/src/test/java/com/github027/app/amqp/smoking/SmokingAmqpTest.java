@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.github027.app.amqp.core.service.AmqpProducer;
-import com.github027.domain.consts.AmqpConst;
+import com.github027.core.amqp.AmqpProducer;
 import com.github027.domain.dao.SysQueueLogDao;
-import com.github027.domain.enums.SysQueueLogStatus;
 import com.github027.domain.model.SysQueueLog;
+import com.github027.domain.model.consts.AmqpConst;
+import com.github027.domain.model.enums.SysQueueLogStatus;
 import com.github027.util._Sys;
 
 import lombok.extern.slf4j.Slf4j;

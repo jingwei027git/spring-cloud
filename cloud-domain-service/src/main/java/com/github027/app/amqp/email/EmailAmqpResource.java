@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github027.app.amqp.core.service.AmqpProducer;
-import com.github027.domain.consts.AmqpConst.Category;
+import com.github027.core.amqp.AmqpProducer;
 import com.github027.domain.dao.SysQueueLogDao;
 import com.github027.domain.model.SysQueueLog;
+import com.github027.domain.model.consts.AmqpConst.Category;
 import com.github027.util._Sys;
 
 @RequestMapping("/amqp/email")

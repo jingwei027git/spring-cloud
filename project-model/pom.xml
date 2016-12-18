@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github027</groupId>
-	<artifactId>project-common</artifactId>
+	<artifactId>project-model</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
-	<name>project-common</name>
+	<name>project-model</name>
 	<description>Demo project for Spring Boot</description>
 
 	<parent>
@@ -26,13 +26,18 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>18.0</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.github027</groupId>
+			<artifactId>project-common</artifactId>
+			<version>0.0.1</version>
 		</dependency>
 		
 		<dependency>

@@ -1,4 +1,4 @@
-package com.github027.app.amqp.core;
+package com.github027.core.amqp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

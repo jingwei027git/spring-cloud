@@ -11,7 +11,7 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import com.github027.domain.consts.AmqpConst;
+import com.github027.domain.model.consts.AmqpConst;
 
 @Component
 public class EmailAmqpConfig {

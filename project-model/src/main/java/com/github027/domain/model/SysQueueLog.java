@@ -8,8 +8,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
 import com.github027.core.model.ModelIdAudit;
-import com.github027.domain.consts.AmqpConst;
-import com.github027.domain.enums.SysQueueLogStatus;
+import com.github027.domain.model.consts.AmqpConst;
+import com.github027.domain.model.enums.SysQueueLogStatus;
 
 import lombok.Getter;
 import lombok.Setter;
