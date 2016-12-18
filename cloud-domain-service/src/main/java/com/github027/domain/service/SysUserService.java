@@ -1,7 +1,8 @@
 package com.github027.domain.service;
 
-import org.springframework.security.core.userdetails.UserDetailsService;
+import com.github027.core.service.ModelService;
+import com.github027.domain.model.SysUser;
 
-public interface SysUserService extends UserDetailsService {
+public interface SysUserService extends ModelService<SysUser, Long> {
 
 }

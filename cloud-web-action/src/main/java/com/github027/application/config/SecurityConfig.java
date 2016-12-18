@@ -12,14 +12,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.github027.domain.service.SysUserService;
+import com.github027.domain.security.SecurityUserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
-	private SysUserService sysUserService;
+	private SecurityUserService sysUserService;
 
 
 	@Autowired

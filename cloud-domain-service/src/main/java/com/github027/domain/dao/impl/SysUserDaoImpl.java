@@ -12,7 +12,7 @@ import lombok.Getter;
 
 @Repository("SysUserDao")
 public class SysUserDaoImpl extends ModelDaoImpl<SysUser, Long> implements SysUserDao {
-	
+
 	@Getter
 	@Autowired
 	private SysUserJpa jpa;
