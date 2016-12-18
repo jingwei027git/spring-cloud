@@ -10,7 +10,7 @@ import com.github027.domain.model.SysQueueLog;
 
 import lombok.Getter;
 
-@Repository("SysQueueLogDao")
+@Repository
 public class SysQueueLogDaoImpl extends ModelDaoImpl<SysQueueLog, Long> implements SysQueueLogDao {
 
 	@Getter

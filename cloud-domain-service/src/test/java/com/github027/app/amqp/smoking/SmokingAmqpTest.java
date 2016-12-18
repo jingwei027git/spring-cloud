@@ -36,7 +36,7 @@ public class SmokingAmqpTest {
 		amqqpProducer.send(AmqpConst.Category.SMOKING, dto);
 		log.info("send message {} to {}", dto, AmqpConst.Category.SMOKING.getExchange());
 
-		_Sys.sleepSeconds(3);
+		_Sys.sleepSeconds(5);
 
 		SysQueueLog sysQueueLog = null;
 		if (dto.getSysQueueLogId() != null) {

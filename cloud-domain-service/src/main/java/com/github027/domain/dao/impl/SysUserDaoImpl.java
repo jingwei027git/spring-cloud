@@ -10,7 +10,7 @@ import com.github027.domain.model.SysUser;
 
 import lombok.Getter;
 
-@Repository("SysUserDao")
+@Repository
 public class SysUserDaoImpl extends ModelDaoImpl<SysUser, Long> implements SysUserDao {
 
 	@Getter
