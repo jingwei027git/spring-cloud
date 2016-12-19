@@ -8,6 +8,8 @@ public class _Sys {
 		SYSTEM, TEST
 	}
 
+	public static final Long siteId = 0L;
+
 	public static LocalDateTime now() {
 		return LocalDateTime.now();
 	}

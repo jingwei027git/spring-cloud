@@ -14,7 +14,10 @@ import lombok.ToString;
 public class BaseAmqpDto implements Serializable {
 
 	private Long sysQueueLogId;
-	private String username;
+	private Long siteId;
+	private Long userId;				// specify to SysUser.id
+
+	private String username;			// for ModelIdAudit.createUser & ModelIdAudit.modifyUser
 	private LocalDateTime sendTime;
 	private LocalDateTime recvTime;
 	private LocalDateTime finishTime;

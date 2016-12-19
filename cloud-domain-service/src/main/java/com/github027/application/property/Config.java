@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @Component
 public class Config {
-	
+
 	@Value("${spring.datasource.driverClassName}")
 	private String datasourceDriverClassName;
 
@@ -23,19 +23,19 @@ public class Config {
 	@Value("${spring.datasource.password}")
 	private String datasourcePassword;
 
-	@Value("${spring.cloud.config.profile}")
-	private String cloudConfigProfile;
-	
-	@Value("${spring.rabbitmq.host}")
-	private String rabbitmqHost;
-	
-	@Value("${spring.rabbitmq.port}")
-	private String rabbitmqPort;
-	
-	@Value("${spring.rabbitmq.username}")
-	private String rabbitmqUsername;
-	
-	@Value("${spring.rabbitmq.password}")
-	private String rabbitmqPassword;
-	
+//	@Value("${spring.cloud.config.profile}")
+//	private String cloudConfigProfile;
+//
+//	@Value("${spring.rabbitmq.host}")
+//	private String rabbitmqHost;
+//
+//	@Value("${spring.rabbitmq.port}")
+//	private String rabbitmqPort;
+//
+//	@Value("${spring.rabbitmq.username}")
+//	private String rabbitmqUsername;
+//
+//	@Value("${spring.rabbitmq.password}")
+//	private String rabbitmqPassword;
+
 }

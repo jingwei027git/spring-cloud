@@ -6,8 +6,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ViewPath {
 
-	mainLayout("app/layout/mainLayout"),
-	onlineLayout("app/layout/onlineLayout"),
+	adminLayout("app/layout/layout-admin"),
+	onlineLayout("app/layout/layout-online"),
 
 	dashboard("app/dashboard"),
 	profile("app/profile")

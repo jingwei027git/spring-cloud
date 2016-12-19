@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class PassSessionIdZuulFilter extends ZuulFilter {
-	
+
 	@Override
 	public String filterType() {
 		return "pre";
@@ -32,12 +32,11 @@ public class PassSessionIdZuulFilter extends ZuulFilter {
 	public Object run() {
 		final RequestContext context = RequestContext.getCurrentContext();
 		final HttpSession httpSession = context.getRequest().getSession();
-		httpSession.setAttribute("redis", "great");
-		
+
 		context.addZuulRequestHeader("Cookie", "SESSION=" + httpSession.getId());
 		log.info("HttpSession ID is {}", httpSession.getId());
 
         return null;
-	}	
+	}
 
 }

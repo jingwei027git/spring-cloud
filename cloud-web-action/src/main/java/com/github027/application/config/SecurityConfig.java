@@ -38,14 +38,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http.csrf().disable()
         	.authorizeRequests()
         	.antMatchers("/dump", "/env", "/bus/env", "/heapdump", "/metrics", "/info", "/health", "/features", "/mappings", "/trace").permitAll() // actuator
-            .antMatchers("/resources/**", "/assets/**").permitAll()
+            .antMatchers("/build/**", "/css/**", "/images/**", "/js/**", "/resources/**", "/vendors/**").permitAll()
             .antMatchers("/admin/**").hasRole("ADMIN") // reserved
             .antMatchers("/db/**").access("hasRole('ADMIN') and hasRole('DBA')") // reserved
             .antMatchers("/**").hasRole("USER")
             .anyRequest().authenticated()
         .and()
         	.formLogin()
-            .loginPage("/login").defaultSuccessUrl("/main")
+            .loginPage("/login").defaultSuccessUrl("/dashboard", true)
             .permitAll()
         .and()
         	.logout()

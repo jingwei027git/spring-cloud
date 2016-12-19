@@ -28,6 +28,7 @@ public class AmqpProducerImpl implements AmqpProducer {
 	public void send(final AmqpConst.Category category, final BaseAmqpDto dto) {
 		Preconditions.checkNotNull(category);
 		Preconditions.checkNotNull(dto);
+		Preconditions.checkNotNull(dto.getSiteId());
 		Preconditions.checkNotNull(trimToNull(dto.getUsername()));
 
 		saveLogWithInitialStatus(category, dto);
