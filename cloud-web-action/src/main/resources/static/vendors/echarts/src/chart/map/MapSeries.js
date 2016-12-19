@@ -17,6 +17,8 @@ define(function (require) {
 
         type: 'series.map',
 
+        layoutMode: 'box',
+
         /**
          * Only first map series of same mapType will drawMap
          * @type {boolean}
@@ -90,14 +92,16 @@ define(function (require) {
          * @param {number} dataIndex
          */
         formatTooltip: function (dataIndex) {
-            var data = this._data;
+            // FIXME orignalData and data is a bit confusing
+            var data = this.getData();
             var formattedValue = addCommas(this.getRawValue(dataIndex));
             var name = data.getName(dataIndex);
 
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];
             for (var i = 0; i < seriesGroup.length; i++) {
-                if (!isNaN(seriesGroup[i].getRawValue(dataIndex))) {
+                var otherIndex = seriesGroup[i].originalData.indexOfName(name);
+                if (!isNaN(seriesGroup[i].originalData.get('value', otherIndex))) {
                     seriesNames.push(
                         encodeHTML(seriesGroup[i].name)
                     );
@@ -106,6 +110,27 @@ define(function (require) {
 
             return seriesNames.join(', ') + '<br />'
                 + name + ' : ' + formattedValue;
+        },
+
+        /**
+         * @implement
+         */
+        getTooltipPosition: function (dataIndex) {
+            if (dataIndex != null) {
+                var name = this.getData().getName(dataIndex);
+                var geo = this.coordinateSystem;
+                var region = geo.getRegion(name);
+
+                return region && geo.dataToPoint(region.center);
+            }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
         },
 
         defaultOption: {
@@ -124,13 +149,26 @@ define(function (require) {
             // right
             // bottom
             // width:
-            // height   // 自适应
+            // height
+
+            // Aspect is width / height. Inited to be geoJson bbox aspect
+            // This parameter is used for scale this aspect
+            aspectScale: 0.75,
+
+            ///// Layout with center and size
+            // If you wan't to put map in a fixed size box with right aspect ratio
+            // This two properties may more conveninet
+            // layoutCenter: [50%, 50%]
+            // layoutSize: 100
+
 
             // 数值合并方式，默认加和，可选为：
             // 'sum' | 'average' | 'max' | 'min'
             // mapValueCalculation: 'sum',
             // 地图数值计算结果小数精度
             // mapValuePrecision: 0,
+
+
             // 显示图例颜色标识（系列标识的小圆点），图例开启时有效
             showLegendSymbol: true,
             // 选择模式，默认关闭，可选single，multiple
@@ -170,18 +208,11 @@ define(function (require) {
                 },
                 // 也是选中样式
                 emphasis: {
-                    areaColor: 'rgba(255,215, 0, 0.8)'
+                    areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
-        },
-
-        setZoom: function (zoom) {
-            this.option.zoom = zoom;
-        },
-
-        setCenter: function (center) {
-            this.option.center = center;
         }
+
     });
 
     zrUtil.mixin(MapSeries, dataSelectableMixin);

@@ -5,6 +5,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
     var formatUtil = require('../../util/format');
+    var helper = require('./helper');
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
 
@@ -12,6 +13,8 @@ define(function(require) {
     return SeriesModel.extend({
 
         type: 'series.treemap',
+
+        layoutMode: 'box',
 
         dependencies: ['grid', 'polar'],
 
@@ -21,6 +24,9 @@ define(function(require) {
         _viewRoot: null,
 
         defaultOption: {
+            // Disable progressive rendering
+            progressive: 0,
+            hoverLayerThreshold: Infinity,
             // center: ['50%', '50%'],          // not supported in ec3.
             // size: ['80%', '80%'],            // deprecated, compatible with ec2.
             left: 'center',
@@ -37,7 +43,7 @@ define(function(require) {
                                                 // Count from zero (zero represents only view root).
             drillDownIcon: '▶',                 // Use html character temporarily because it is complicated
                                                 // to align specialized icon. ▷▶❒❐▼✚
-            visualDimension: 0,                 // Can be 0, 1, 2, 3.
+
             zoomToNodeRatio: 0.32 * 0.32,       // Be effective when using zoomToNode. Specify the proportion of the
                                                 // target node area in the view area.
             roam: true,                         // true, false, 'scale' or 'zoom', 'move'.
@@ -100,8 +106,21 @@ define(function(require) {
 
                 }
             },
-            color: 'none',              // Array. Specify color list of each level.
-                                        // level[0].color would be global color list.
+
+            visualDimension: 0,                 // Can be 0, 1, 2, 3.
+            visualMin: null,
+            visualMax: null,
+
+            color: [],                  // + treemapSeries.color should not be modified. Please only modified
+                                        // level[n].color (if necessary).
+                                        // + Specify color list of each level. level[0].color would be global
+                                        // color list if not specified. (see method `setDefault`).
+                                        // + But set as a empty array to forbid fetch color from global palette
+                                        // when using nodeModel.get('color'), otherwise nodes on deep level
+                                        // will always has color palette set and are not able to inherit color
+                                        // from parent node.
+                                        // + TreemapSeries.color can not be set as 'none', otherwise effect
+                                        // legend color fetching (see seriesColor.js).
             colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
             colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
             colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
@@ -178,21 +197,8 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
 
-            var data = this.getData();
-            var node = data.tree.getNodeByDataIndex(dataIndex);
-            var treePathInfo = params.treePathInfo = [];
-
-            while (node) {
-                var nodeDataIndex = node.dataIndex;
-                treePathInfo.push({
-                    name: node.name,
-                    dataIndex: nodeDataIndex,
-                    value: this.getRawValue(nodeDataIndex)
-                });
-                node = node.parentNode;
-            }
-
-            treePathInfo.reverse();
+            var node = this.getData().tree.getNodeByDataIndex(dataIndex);
+            params.treePathInfo = helper.wrapTreePathInfo(node, this);
 
             return params;
         },
@@ -331,6 +337,7 @@ define(function(require) {
         zrUtil.each(levels, function (levelDefine) {
             var model = new Model(levelDefine);
             var modelColor = model.get('color');
+
             if (model.get('itemStyle.normal.color')
                 || (modelColor && modelColor !== 'none')
             ) {

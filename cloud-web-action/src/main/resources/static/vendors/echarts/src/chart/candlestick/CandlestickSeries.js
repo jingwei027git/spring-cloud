@@ -37,8 +37,8 @@ define(function(require) {
 
             hoverAnimation: true,
 
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             layout: null, // 'horizontal' or 'vertical'
 
@@ -81,6 +81,10 @@ define(function(require) {
             }, this);
 
             return encodeHTML(this.name) + '<br />' + valueHTMLArr.join('<br />');
+        },
+
+        brushSelector: function (itemLayout, selectors) {
+            return selectors.rect(itemLayout.brushRect);
         }
 
     });

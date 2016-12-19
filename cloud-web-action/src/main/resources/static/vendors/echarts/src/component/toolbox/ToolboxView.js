@@ -12,7 +12,7 @@ define(function (require) {
 
         type: 'toolbox',
 
-        render: function (toolboxModel, ecModel, api) {
+        render: function (toolboxModel, ecModel, api, payload) {
             var group = this.group;
             group.removeAll();
 
@@ -58,7 +58,7 @@ define(function (require) {
                         if (!Feature) {
                             return;
                         }
-                        feature = new Feature(featureModel);
+                        feature = new Feature(featureModel, ecModel, api);
                     }
                     features[featureName] = feature;
                 }
@@ -69,6 +69,8 @@ define(function (require) {
                         return;
                     }
                     feature.model = featureModel;
+                    feature.ecModel = ecModel;
+                    feature.api = api;
                 }
 
                 if (!featureName && oldName) {
@@ -93,7 +95,7 @@ define(function (require) {
                 };
 
                 if (feature.render) {
-                    feature.render(featureModel, ecModel, api);
+                    feature.render(featureModel, ecModel, api, payload);
                 }
             }
 
@@ -153,6 +155,8 @@ define(function (require) {
                     if (toolboxModel.get('showTitle')) {
                         path.__title = titles[iconName];
                         path.on('mouseover', function () {
+                                // Should not reuse above hoverStyle, which might be modified.
+                                var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
                                 path.setStyle({
                                     text: titles[iconName],
                                     textPosition: hoverStyle.textPosition || 'bottom',
@@ -209,6 +213,18 @@ define(function (require) {
                         hoverStyle.textAlign = 'left';
                     }
                 }
+            });
+        },
+
+        updateView: function (toolboxModel, ecModel, api, payload) {
+            zrUtil.each(this._features, function (feature) {
+                feature.updateView && feature.updateView(feature.model, ecModel, api, payload);
+            });
+        },
+
+        updateLayout: function (toolboxModel, ecModel, api, payload) {
+            zrUtil.each(this._features, function (feature) {
+                feature.updateLayout && feature.updateLayout(feature.model, ecModel, api, payload);
             });
         },
 

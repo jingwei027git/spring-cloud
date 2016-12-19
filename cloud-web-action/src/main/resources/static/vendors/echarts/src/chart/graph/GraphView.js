@@ -7,6 +7,14 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var adjustEdge = require('./adjustEdge');
+    var zrUtil = require('zrender/core/util');
+
+    var nodeOpacityPath = ['itemStyle', 'normal', 'opacity'];
+    var lineOpacityPath = ['lineStyle', 'normal', 'opacity'];
+
+    function getItemOpacity(item, opacityPath) {
+        return item.getVisual('opacity') || item.getModel().get(opacityPath);
+    }
 
     require('../../echarts').extendChartView({
 
@@ -31,10 +39,6 @@ define(function (require) {
 
         render: function (seriesModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
-            // Only support view and geo coordinate system
-            // if (coordSys.type !== 'geo' && coordSys.type !== 'view') {
-            //     return;
-            // }
 
             this._model = seriesModel;
             this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
@@ -59,7 +63,6 @@ define(function (require) {
             // Fix edge contact point with node
             adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
 
-
             var data = seriesModel.getData();
             symbolDraw.updateData(data);
 
@@ -76,8 +79,10 @@ define(function (require) {
             if (forceLayout) {
                 this._startForceLayoutIteration(forceLayout, layoutAnimation);
             }
-            // Update draggable
             data.eachItemGraphicEl(function (el, idx) {
+                var itemModel = data.getItemModel(idx);
+                // Update draggable
+                el.off('drag').off('dragend');
                 var draggable = data.getItemModel(idx).get('draggable');
                 if (draggable) {
                     el.on('drag', function () {
@@ -95,13 +100,127 @@ define(function (require) {
                         }
                     }, this);
                 }
-                else {
-                    el.off('drag');
-                }
                 el.setDraggable(draggable && forceLayout);
+
+                el.off('mouseover', this._focusNodeAdjacency);
+                el.off('mouseout', this._unfocusAll);
+                if (itemModel.get('focusNodeAdjacency')) {
+                    el.on('mouseover', this._focusNodeAdjacency, this);
+                    el.on('mouseout', this._unfocusAll, this);
+                }
             }, this);
 
+            var circularRotateLabel = seriesModel.get('layout') === 'circular' && seriesModel.get('circular.rotateLabel');
+            var cx = data.getLayout('cx');
+            var cy = data.getLayout('cy');
+            data.eachItemGraphicEl(function (el, idx) {
+                var symbolPath = el.getSymbolPath();
+                if (circularRotateLabel) {
+                    var pos = data.getItemLayout(idx);
+                    var rad = Math.atan2(pos[1] - cy, pos[0] - cx);
+                    if (rad < 0) {
+                        rad = Math.PI * 2 + rad;
+                    }
+                    var isLeft = pos[0] < cx;
+                    if (isLeft) {
+                        rad = rad - Math.PI;
+                    }
+                    var textPosition = isLeft ? 'left' : 'right';
+                    symbolPath.setStyle({
+                        textRotation: rad,
+                        textPosition: textPosition
+                    });
+                    symbolPath.hoverStyle && (symbolPath.hoverStyle.textPosition = textPosition);
+                }
+                else {
+                    symbolPath.setStyle({
+                        textRotation: 0
+                    });
+                }
+            });
+
             this._firstRender = false;
+        },
+
+        dispose: function () {
+            this._controller && this._controller.dispose();
+        },
+
+        _focusNodeAdjacency: function (e) {
+            var data = this._model.getData();
+            var graph = data.graph;
+            var el = e.target;
+            var dataIndex = el.dataIndex;
+            var dataType = el.dataType;
+
+            function fadeOutItem(item, opacityPath) {
+                var opacity = getItemOpacity(item, opacityPath);
+                var el = item.getGraphicEl();
+                if (opacity == null) {
+                    opacity = 1;
+                }
+
+                el.traverse(function (child) {
+                    child.trigger('normal');
+                    if (child.type !== 'group') {
+                        child.setStyle('opacity', opacity * 0.1);
+                    }
+                });
+            }
+
+            function fadeInItem(item, opacityPath) {
+                var opacity = getItemOpacity(item, opacityPath);
+                var el = item.getGraphicEl();
+
+                el.traverse(function (child) {
+                    child.trigger('emphasis');
+                    if (child.type !== 'group') {
+                        child.setStyle('opacity', opacity);
+                    }
+                });
+            }
+            if (dataIndex !== null && dataType !== 'edge') {
+                graph.eachNode(function (node) {
+                    fadeOutItem(node, nodeOpacityPath);
+                });
+                graph.eachEdge(function (edge) {
+                    fadeOutItem(edge, lineOpacityPath);
+                });
+
+                var node = graph.getNodeByIndex(dataIndex);
+                fadeInItem(node, nodeOpacityPath);
+                zrUtil.each(node.edges, function (edge) {
+                    if (edge.dataIndex < 0) {
+                        return;
+                    }
+                    fadeInItem(edge, lineOpacityPath);
+                    fadeInItem(edge.node1, nodeOpacityPath);
+                    fadeInItem(edge.node2, nodeOpacityPath);
+                });
+            }
+        },
+
+        _unfocusAll: function () {
+            var data = this._model.getData();
+            var graph = data.graph;
+            graph.eachNode(function (node) {
+                var opacity = getItemOpacity(node, nodeOpacityPath);
+                node.getGraphicEl().traverse(function (child) {
+                    child.trigger('normal');
+                    if (child.type !== 'group') {
+                        child.setStyle('opacity', opacity);
+                    }
+                });
+            });
+            graph.eachEdge(function (edge) {
+                var opacity = getItemOpacity(edge, lineOpacityPath);
+                edge.getGraphicEl().traverse(function (child) {
+                    child.trigger('normal');
+                    if (child.type !== 'group') {
+                        child.setStyle('opacity', opacity);
+                    }
+                });
+            });
         },
 
         _startForceLayoutIteration: function (forceLayout, layoutAnimation) {
@@ -121,11 +240,13 @@ define(function (require) {
         _updateController: function (seriesModel, api) {
             var controller = this._controller;
             var group = this.group;
-            controller.rectProvider = function () {
+
+            controller.setContainsPoint(function (x, y) {
                 var rect = group.getBoundingRect();
                 rect.applyTransform(group.transform);
-                return rect;
-            };
+                return rect.contain(x, y);
+            });
+
             if (seriesModel.coordinateSystem.type !== 'view') {
                 controller.disable();
                 return;
@@ -180,7 +301,7 @@ define(function (require) {
 
             var nodeScaleRatio = this._nodeScaleRatio;
 
-            var groupScale = this.group.scale;
+            var groupScale = coordSys.scale;
             var groupZoom = (groupScale && groupScale[0]) || 1;
             // Scale node when zoom changes
             var roamZoom = coordSys.getZoom();
@@ -190,10 +311,10 @@ define(function (require) {
         },
 
         updateLayout: function (seriesModel) {
+            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+
             this._symbolDraw.updateLayout();
             this._lineDraw.updateLayout();
-
-            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
         },
 
         remove: function (ecModel, api) {

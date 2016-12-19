@@ -147,20 +147,23 @@ define(function (require) {
             this.option.center = center;
         },
 
+        ifEnableAnimation: function () {
+            return GraphSeries.superCall(this, 'ifEnableAnimation')
+                // Not enable animation when do force layout
+                && !(this.get('layout') === 'force' && this.get('force.layoutAnimation'));
+        },
+
         defaultOption: {
             zlevel: 0,
             z: 2,
 
-            color: ['#61a0a8', '#d14a61', '#fd9c35', '#675bba', '#fec42c',
-                    '#dd4444', '#fd9c35', '#cd4870'],
-
             coordinateSystem: 'view',
 
             // Default option for all coordinate systems
-            xAxisIndex: 0,
-            yAxisIndex: 0,
-            polarIndex: 0,
-            geoIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
+            // polarIndex: 0,
+            // geoIndex: 0,
 
             legendHoverLink: true,
 
@@ -168,11 +171,20 @@ define(function (require) {
 
             layout: null,
 
-            // Configuration of force
+            focusNodeAdjacency: false,
+
+            // Configuration of circular layout
+            circular: {
+                rotateLabel: false
+            },
+            // Configuration of force directed layout
             force: {
                 initLayout: null,
-                repulsion: 50,
+                // Node repulsion. Can be an array to represent range.
+                repulsion: [0, 50],
                 gravity: 0.1,
+
+                // Edge length. Can be an array to represent range.
                 edgeLength: 30,
 
                 layoutAnimation: true

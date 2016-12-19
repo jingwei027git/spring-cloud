@@ -11,8 +11,7 @@ define(function (require) {
     var sliderMove = require('../helper/sliderMove');
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
-    var mathRound = Math.round;
-    var mathMax = Math.max;
+    // var mathMax = Math.max;
     var each = zrUtil.each;
 
     // Constants
@@ -65,7 +64,13 @@ define(function (require) {
              * @private
              * @type {number}
              */
-            this._halfHandleSize;
+            this._handleWidth;
+
+            /**
+             * @private
+             * @type {number}
+             */
+            this._handleHeight;
 
             /**
              * @private
@@ -99,7 +104,6 @@ define(function (require) {
             );
 
             this._orient = dataZoomModel.get('orient');
-            this._halfHandleSize = mathRound(dataZoomModel.get('handleSize') / 2);
 
             if (this.dataZoomModel.get('show') === false) {
                 this.group.removeAll();
@@ -143,8 +147,10 @@ define(function (require) {
             var barGroup = this._displayables.barGroup = new graphic.Group();
 
             this._renderBackground();
-            this._renderDataShadow();
+
             this._renderHandle();
+
+            this._renderDataShadow();
 
             thisGroup.add(barGroup);
 
@@ -230,20 +236,14 @@ define(function (require) {
 
             // Position barGroup
             var rect = thisGroup.getBoundingRect([barGroup]);
-            thisGroup.position[0] = location.x - rect.x;
-            thisGroup.position[1] = location.y - rect.y;
+            thisGroup.attr('position', [location.x - rect.x, location.y - rect.y]);
         },
 
         /**
          * @private
          */
         _getViewExtent: function () {
-            // View total length.
-            var halfHandleSize = this._halfHandleSize;
-            var totalLength = mathMax(this._size[0], halfHandleSize * 4);
-            var extent = [halfHandleSize, totalLength - halfHandleSize];
-
-            return extent;
+            return [0, this._size[0]];
         },
 
         _renderBackground : function () {
@@ -257,7 +257,8 @@ define(function (require) {
                 },
                 style: {
                     fill: dataZoomModel.get('backgroundColor')
-                }
+                },
+                z2: -40
             }));
         },
 
@@ -286,32 +287,63 @@ define(function (require) {
 
             var thisShadowExtent = [0, size[0]];
 
-            var points = [[size[0], 0], [0, 0]];
+            var areaPoints = [[size[0], 0], [0, 0]];
+            var linePoints = [];
             var step = thisShadowExtent[1] / (data.count() - 1);
             var thisCoord = 0;
 
             // Optimize for large data shadow
             var stride = Math.round(data.count() / size[0]);
+            var lastIsEmpty;
             data.each([otherDim], function (value, index) {
                 if (stride > 0 && (index % stride)) {
                     thisCoord += step;
                     return;
                 }
+
                 // FIXME
-                // 应该使用统计的空判断？还是在list里进行空判断？
-                var otherCoord = (value == null || isNaN(value) || value === '')
-                    ? null
-                    : linearMap(value, otherDataExtent, otherShadowExtent, true);
-                otherCoord != null && points.push([thisCoord, otherCoord]);
+                // Should consider axis.min/axis.max when drawing dataShadow.
+
+                // FIXME
+                // 应该使用统一的空判断？还是在list里进行空判断？
+                var isEmpty = value == null || isNaN(value) || value === '';
+                // See #4235.
+                var otherCoord = isEmpty
+                    ? 0 : linearMap(value, otherDataExtent, otherShadowExtent, true);
+
+                // Attempt to draw data shadow precisely when there are empty value.
+                if (isEmpty && !lastIsEmpty && index) {
+                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                }
+                else if (!isEmpty && lastIsEmpty) {
+                    areaPoints.push([thisCoord, 0]);
+                    linePoints.push([thisCoord, 0]);
+                }
+
+                areaPoints.push([thisCoord, otherCoord]);
+                linePoints.push([thisCoord, otherCoord]);
 
                 thisCoord += step;
+                lastIsEmpty = isEmpty;
             });
 
-            this._displayables.barGroup.add(new graphic.Polyline({
-                shape: {points: points},
-                style: {fill: this.dataZoomModel.get('dataBackgroundColor'), lineWidth: 0},
+            var dataZoomModel = this.dataZoomModel;
+            // var dataBackgroundModel = dataZoomModel.getModel('dataBackground');
+            this._displayables.barGroup.add(new graphic.Polygon({
+                shape: {points: areaPoints},
+                style: zrUtil.defaults(
+                    {fill: dataZoomModel.get('dataBackgroundColor')},
+                    dataZoomModel.getModel('dataBackground.areaStyle').getAreaStyle()
+                ),
                 silent: true,
                 z2: -20
+            }));
+            this._displayables.barGroup.add(new graphic.Polyline({
+                shape: {points: linePoints},
+                style: dataZoomModel.getModel('dataBackground.lineStyle').getLineStyle(),
+                silent: true,
+                z2: -19
             }));
         },
 
@@ -370,17 +402,18 @@ define(function (require) {
             var handleLabels = displaybles.handleLabels = [];
             var barGroup = this._displayables.barGroup;
             var size = this._size;
+            var dataZoomModel = this.dataZoomModel;
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
                 cursor: 'move',
                 drift: bind(this._onDragMove, this, 'all'),
+                ondragstart: bind(this._showDataInfo, this, true),
                 ondragend: bind(this._onDragEnd, this),
                 onmouseover: bind(this._showDataInfo, this, true),
                 onmouseout: bind(this._showDataInfo, this, false),
                 style: {
-                    fill: this.dataZoomModel.get('fillerColor'),
-                    // text: ':::',
+                    fill: dataZoomModel.get('fillerColor'),
                     textPosition : 'inside'
                 }
             }));
@@ -395,27 +428,47 @@ define(function (require) {
                     height: size[1]
                 },
                 style: {
-                    stroke: this.dataZoomModel.get('dataBackgroundColor'),
+                    stroke: dataZoomModel.get('dataBackgroundColor')
+                        || dataZoomModel.get('borderColor'),
                     lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                     fill: 'rgba(0,0,0,0)'
                 }
             })));
 
+            var iconStr = dataZoomModel.get('handleIcon');
             each([0, 1], function (handleIndex) {
-
-                barGroup.add(handles[handleIndex] = new Rect({
+                var path = graphic.makePath(iconStr, {
                     style: {
-                        fill: this.dataZoomModel.get('handleColor')
+                        strokeNoScale: true
                     },
-                    cursor: 'move',
+                    rectHover: true,
+                    cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)
-                }));
+                }, {
+                    x: -0.5,
+                    y: 0,
+                    width: 1,
+                    height: 1
+                }, 'center');
 
-                var textStyleModel = this.dataZoomModel.textStyleModel;
+                var bRect = path.getBoundingRect();
+                this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
+                this._handleWidth = bRect.width / bRect.height * this._handleHeight;
+
+                path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+                var handleColor = dataZoomModel.get('handleColor');
+                // Compatitable with previous version
+                if (handleColor != null) {
+                    path.style.fill = handleColor;
+                }
+
+                barGroup.add(handles[handleIndex] = path);
+
+                var textStyleModel = dataZoomModel.textStyleModel;
 
                 this.group.add(
                     handleLabels[handleIndex] = new graphic.Text({
@@ -427,7 +480,8 @@ define(function (require) {
                         textAlign: 'center',
                         fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
-                    }
+                    },
+                    z2: 10
                 }));
 
             }, this);
@@ -474,25 +528,20 @@ define(function (require) {
         /**
          * @private
          */
-        _updateView: function () {
+        _updateView: function (nonRealtime) {
             var displaybles = this._displayables;
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
             var size = this._size;
-            var halfHandleSize = this._halfHandleSize;
 
             each([0, 1], function (handleIndex) {
-
                 // Handles
                 var handle = displaybles.handles[handleIndex];
-                handle.setShape({
-                    x: handleEnds[handleIndex] - halfHandleSize,
-                    y: -1,
-                    width: halfHandleSize * 2,
-                    height: size[1] + 2,
-                    r: 1
+                var handleHeight = this._handleHeight;
+                handle.attr({
+                    scale: [handleHeight, handleHeight],
+                    position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
                 });
-
             }, this);
 
             // Filler
@@ -500,16 +549,16 @@ define(function (require) {
                 x: handleInterval[0],
                 y: 0,
                 width: handleInterval[1] - handleInterval[0],
-                height: this._size[1]
+                height: size[1]
             });
 
-            this._updateDataInfo();
+            this._updateDataInfo(nonRealtime);
         },
 
         /**
          * @private
          */
-        _updateDataInfo: function () {
+        _updateDataInfo: function (nonRealtime) {
             var dataZoomModel = this.dataZoomModel;
             var displaybles = this._displayables;
             var handleLabels = displaybles.handleLabels;
@@ -519,19 +568,20 @@ define(function (require) {
             // FIXME
             // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
             if (dataZoomModel.get('showDetail')) {
-                var dataInterval;
-                var axis;
-                dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-                    // Using dataInterval of the first axis.
-                    if (!dataInterval) {
-                        dataInterval = dataZoomModel
-                            .getAxisProxy(dimNames.name, axisIndex)
-                            .getDataValueWindow();
-                        axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
-                    }
-                }, this);
+                var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
-                if (dataInterval) {
+                if (axisProxy) {
+                    var axis = axisProxy.getAxisModel().axis;
+                    var range = this._range;
+
+                    var dataInterval = nonRealtime
+                        // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                        ? axisProxy.calculateDataWindow(
+                            {start: range[0], end: range[1]},
+                            axisProxy.getDataExtent()
+                        ).valueWindow
+                        : axisProxy.getDataValueWindow();
+
                     labelTexts = [
                         this._formatLabel(dataInterval[0], axis),
                         this._formatLabel(dataInterval[1], axis)
@@ -547,13 +597,14 @@ define(function (require) {
             function setLabel(handleIndex) {
                 // Label
                 // Text should not transform by barGroup.
+                // Ignore handlers transform
                 var barTransform = graphic.getTransform(
-                    displaybles.handles[handleIndex], this.group
+                    displaybles.handles[handleIndex].parent, this.group
                 );
                 var direction = graphic.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
                 );
-                var offset = this._halfHandleSize + LABEL_GAP;
+                var offset = this._handleWidth / 2 + LABEL_GAP;
                 var textPoint = graphic.applyTransform(
                     [
                         orderedHandleEnds[handleIndex] + (handleIndex === 0 ? -offset : offset),
@@ -577,16 +628,13 @@ define(function (require) {
         _formatLabel: function (value, axis) {
             var dataZoomModel = this.dataZoomModel;
             var labelFormatter = dataZoomModel.get('labelFormatter');
-            if (zrUtil.isFunction(labelFormatter)) {
-                return labelFormatter(value);
-            }
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
             if (labelPrecision == null || labelPrecision === 'auto') {
                 labelPrecision = axis.getPixelPrecision();
             }
 
-            value = (value == null && isNaN(value))
+            var valueStr = (value == null && isNaN(value))
                 ? ''
                 // FIXME Glue code
                 : (axis.type === 'category' || axis.type === 'time')
@@ -594,11 +642,11 @@ define(function (require) {
                     // param of toFixed should less then 20.
                     : value.toFixed(Math.min(labelPrecision, 20));
 
-            if (zrUtil.isString(labelFormatter)) {
-                value = labelFormatter.replace('{value}', value);
-            }
-
-            return value;
+            return zrUtil.isFunction(labelFormatter)
+                ? labelFormatter(value, valueStr)
+                : zrUtil.isString(labelFormatter)
+                ? labelFormatter.replace('{value}', valueStr)
+                : valueStr;
         },
 
         /**
@@ -621,10 +669,13 @@ define(function (require) {
             var vertex = this._applyBarTransform([dx, dy], true);
 
             this._updateInterval(handleIndex, vertex[0]);
-            this._updateView();
 
-            if (this.dataZoomModel.get('realtime')) {
-                this._dispatchZoomAction();
+            var realtime = this.dataZoomModel.get('realtime');
+
+            this._updateView(!realtime);
+
+            if (realtime) {
+                realtime && this._dispatchZoomAction();
             }
         },
 

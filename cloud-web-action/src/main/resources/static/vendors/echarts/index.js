@@ -23,12 +23,15 @@ require('./lib/chart/effectScatter');
 require('./lib/chart/lines');
 require('./lib/chart/heatmap');
 
+require('./lib/component/graphic');
 require('./lib/component/grid');
 require('./lib/component/legend');
 require('./lib/component/tooltip');
 require('./lib/component/polar');
 require('./lib/component/geo');
 require('./lib/component/parallel');
+require('./lib/component/singleAxis');
+require('./lib/component/brush');
 
 require('./lib/component/title');
 
@@ -37,6 +40,7 @@ require('./lib/component/visualMap');
 
 require('./lib/component/markPoint');
 require('./lib/component/markLine');
+require('./lib/component/markArea');
 
 require('./lib/component/timeline');
 require('./lib/component/toolbox');

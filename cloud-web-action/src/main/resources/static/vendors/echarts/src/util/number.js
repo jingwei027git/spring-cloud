@@ -106,9 +106,13 @@ define(function (require) {
      * @param {number} x
      * @return {number}
      */
-    number.round = function (x) {
-        // PENDING
-        return +(+x).toFixed(10);
+    number.round = function (x, precision) {
+        if (precision == null) {
+            precision = 10;
+        }
+        // Avoid range error
+        precision = Math.min(Math.max(0, precision), 20);
+        return +(+x).toFixed(precision);
     };
 
     number.asc = function (arr) {
@@ -123,6 +127,7 @@ define(function (require) {
      * @param {number} val
      */
     number.getPrecision = function (val) {
+        val = +val;
         if (isNaN(val)) {
             return 0;
         }
@@ -137,6 +142,15 @@ define(function (require) {
             count++;
         }
         return count;
+    };
+
+    number.getPrecisionSafe = function (val) {
+        var str = val.toString();
+        var dotIndex = str.indexOf('.');
+        if (dotIndex < 0) {
+            return 0;
+        }
+        return str.length - 1 - dotIndex;
     };
 
     /**
@@ -178,16 +192,23 @@ define(function (require) {
 
     /**
      * @param {string|Date|number} value
-     * @return {number} timestamp
+     * @return {Date} date
      */
     number.parseDate = function (value) {
-        return value instanceof Date
-            ? value
-            : new Date(
-                typeof value === 'string'
-                    ? value.replace(/-/g, '/')
-                    : Math.round(value)
-            );
+        if (value instanceof Date) {
+            return value;
+        }
+        else if (typeof value === 'string') {
+            // Treat as ISO format. See issue #3623
+            var ret = new Date(value);
+            if (isNaN(+ret)) {
+                // FIXME new Date('1970-01-01') is UTC, new Date('1970/01/01') is local
+                ret = new Date(new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'));
+            }
+            return ret;
+        }
+
+        return new Date(Math.round(value));
     };
 
     /**
@@ -226,6 +247,70 @@ define(function (require) {
             else { nf = 10; }
         }
         return nf * exp10;
+    };
+
+    /**
+     * Order intervals asc, and split them when overlap.
+     * expect(numberUtil.reformIntervals([
+     *     {interval: [18, 62], close: [1, 1]},
+     *     {interval: [-Infinity, -70], close: [0, 0]},
+     *     {interval: [-70, -26], close: [1, 1]},
+     *     {interval: [-26, 18], close: [1, 1]},
+     *     {interval: [62, 150], close: [1, 1]},
+     *     {interval: [106, 150], close: [1, 1]},
+     *     {interval: [150, Infinity], close: [0, 0]}
+     * ])).toEqual([
+     *     {interval: [-Infinity, -70], close: [0, 0]},
+     *     {interval: [-70, -26], close: [1, 1]},
+     *     {interval: [-26, 18], close: [0, 1]},
+     *     {interval: [18, 62], close: [0, 1]},
+     *     {interval: [62, 150], close: [0, 1]},
+     *     {interval: [150, Infinity], close: [0, 0]}
+     * ]);
+     * @param {Array.<Object>} list, where `close` mean open or close
+     *        of the interval, and Infinity can be used.
+     * @return {Array.<Object>} The origin list, which has been reformed.
+     */
+    number.reformIntervals = function (list) {
+        list.sort(function (a, b) {
+            return littleThan(a, b, 0) ? -1 : 1;
+        });
+
+        var curr = -Infinity;
+        var currClose = 1;
+        for (var i = 0; i < list.length;) {
+            var interval = list[i].interval;
+            var close = list[i].close;
+
+            for (var lg = 0; lg < 2; lg++) {
+                if (interval[lg] <= curr) {
+                    interval[lg] = curr;
+                    close[lg] = !lg ? 1 - currClose : 1;
+                }
+                curr = interval[lg];
+                currClose = close[lg];
+            }
+
+            if (interval[0] === interval[1] && close[0] * close[1] !== 1) {
+                list.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+        }
+
+        return list;
+
+        function littleThan(a, b, lg) {
+            return a.interval[lg] < b.interval[lg]
+                || (
+                    a.interval[lg] === b.interval[lg]
+                    && (
+                        (a.close[lg] - b.close[lg] === (!lg ? 1 : -1))
+                        || (!lg && littleThan(a, b, 1))
+                    )
+                );
+        }
     };
 
     return number;

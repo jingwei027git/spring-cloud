@@ -142,11 +142,12 @@ define(function (require) {
             self._inContent = true;
         };
         el.onmousemove = function (e) {
+            e = e || window.event;
             if (!self.enterable) {
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently
                 var handler = zr.handler;
-                eventUtil.normalizeEvent(container, e);
+                eventUtil.normalizeEvent(container, e, true);
                 handler.dispatch('mousemove', e);
             }
         };
@@ -158,33 +159,6 @@ define(function (require) {
             }
             self._inContent = false;
         };
-
-        compromiseMobile(el, container);
-    }
-
-    function compromiseMobile(tooltipContentEl, container) {
-        // Prevent default behavior on mobile. For example,
-        // default pinch gesture will cause browser zoom.
-        // We do not preventing event on tooltip contnet el,
-        // because user may need customization in tooltip el.
-        eventUtil.addEventListener(container, 'touchstart', preventDefault);
-        eventUtil.addEventListener(container, 'touchmove', preventDefault);
-        eventUtil.addEventListener(container, 'touchend', preventDefault);
-
-        function preventDefault(e) {
-            if (contains(e.target)) {
-                e.preventDefault();
-            }
-        }
-
-        function contains(targetEl) {
-            while (targetEl && targetEl !== container) {
-                if (targetEl === tooltipContentEl) {
-                    return true;
-                }
-                targetEl = targetEl.parentNode;
-            }
-        }
     }
 
     TooltipContent.prototype = {
@@ -211,11 +185,14 @@ define(function (require) {
 
         show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);
+            var el = this.el;
 
-            this.el.style.cssText = gCssText + assembleCssText(tooltipModel)
+            el.style.cssText = gCssText + assembleCssText(tooltipModel)
                 // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
                 + ';left:' + this._x + 'px;top:' + this._y + 'px;'
                 + (tooltipModel.get('extraCssText') || '');
+
+            el.style.display = el.innerHTML ?  'block' : 'none';
 
             this._show = true;
         },

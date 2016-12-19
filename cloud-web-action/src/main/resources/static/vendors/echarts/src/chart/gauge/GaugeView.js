@@ -25,7 +25,7 @@ define(function (require) {
     function formatLabel(label, labelFormatter) {
         if (labelFormatter) {
             if (typeof labelFormatter === 'string') {
-                label = labelFormatter.replace('{value}', label);
+                label = labelFormatter.replace('{value}', label != null ? label : '');
             }
             else if (typeof labelFormatter === 'function') {
                 label = labelFormatter(label);
@@ -52,6 +52,8 @@ define(function (require) {
                 seriesModel, ecModel, api, colorList, posInfo
             );
         },
+
+        dispose: function () {},
 
         _renderMain: function (seriesModel, ecModel, api, colorList, posInfo) {
             var group = this.group;
@@ -204,12 +206,13 @@ define(function (require) {
                         numberUtil.round(i / splitNumber * (maxVal - minVal) + minVal),
                         labelModel.get('formatter')
                     );
+                    var distance = labelModel.get('distance');
 
                     var text = new graphic.Text({
                         style: {
                             text: label,
-                            x: unitX * (r - splitLineLen - 5) + cx,
-                            y: unitY * (r - splitLineLen - 5) + cy,
+                            x: unitX * (r - splitLineLen - distance) + cx,
+                            y: unitY * (r - splitLineLen - distance) + cy,
                             fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
@@ -265,10 +268,6 @@ define(function (require) {
         ) {
             var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
             var angleExtent = [startAngle, endAngle];
-
-            if (!clockwise) {
-                angleExtent = angleExtent.reverse();
-            }
 
             var data = seriesModel.getData();
             var oldData = this._data;

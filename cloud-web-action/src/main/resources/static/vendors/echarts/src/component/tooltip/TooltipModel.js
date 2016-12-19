@@ -17,7 +17,7 @@ define(function (require) {
             // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             trigger: 'item',
 
-            // 触发条件，支持 'click' | 'mousemove'
+            // 触发条件，支持 'click' | 'mousemove' | 'none'
             triggerOn: 'mousemove',
 
             // 是否永远显示 content
@@ -25,6 +25,9 @@ define(function (require) {
 
             // 位置 {Array} | {Function}
             // position: null
+
+            // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
+            confine: false,
 
             // 内容格式器：{string}（Template） ¦ {Function}
             // formatter: null

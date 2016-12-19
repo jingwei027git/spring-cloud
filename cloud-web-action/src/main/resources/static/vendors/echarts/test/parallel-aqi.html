@@ -10,6 +10,10 @@
             body {
                 /*background: #000;*/
             }
+            #main {
+                width: 766px;
+                height: 688px;
+            }
         </style>
         <div id="main"></div>
 
@@ -36,6 +40,7 @@
                 'echarts',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
+                'echarts/component/tooltip',
                 'echarts/component/visualMap',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
@@ -54,6 +59,7 @@
                 };
 
                 chart.setOption({
+                    animation: true,
                     legend: {
                         bottom: 30,
                         data: ['北京', '上海', '广州'],
@@ -88,8 +94,11 @@
                         max: 150,
                         dimension: 2,
                         inRange: {
-                            color: ['#d94e5d','#eac736','#50a3ba'].reverse(),
-                            // colorAlpha: [0, 1]
+                            color: ['#d94e5d','#eac736','#50a3ba'].reverse()
+                        },
+                        outOfRange: {
+                            color: ['#ccc'],
+                            opacity: 0.001
                         }
                     },
                     // dataZoom: {
@@ -98,7 +107,7 @@
                     //     parallelAxisIndex: [0]
                     // },
                     parallelAxis: [
-                        {dim: 0, name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
+                        {dim: 0, name: schema[0].text, inverse: true, max: 31, nameLocation: 'end'},
                         {dim: 1, name: schema[1].text},
                         {dim: 2, name: schema[2].text},
                         {dim: 3, name: schema[3].text},
@@ -115,6 +124,9 @@
                             name: 'AQI指数',
                             nameLocation: 'end',
                             nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
                             nameTextStyle: {
                                 // color: '#fff',
                                 fontSize: 14

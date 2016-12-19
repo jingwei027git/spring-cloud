@@ -25,12 +25,13 @@ define(function(require, factory) {
      * @inner
      */
     function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
-        return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
+        return axisModel.findGridModel() === gridModel;
     }
 
     function getLabelUnionRect(axis) {
         var axisModel = axis.model;
         var labels = axisModel.getFormattedLabels();
+        var textStyleModel = axisModel.getModel('axisLabel.textStyle');
         var rect;
         var step = 1;
         var labelCount = labels.length;
@@ -40,7 +41,7 @@ define(function(require, factory) {
         }
         for (var i = 0; i < labelCount; i += step) {
             if (!axis.isLabelIgnored(i)) {
-                var singleRect = axisModel.getTextRect(labels[i]);
+                var singleRect = textStyleModel.getTextRect(labels[i]);
                 // FIXME consider label rotate
                 rect ? rect.union(singleRect) : (rect = singleRect);
             }
@@ -95,9 +96,11 @@ define(function(require, factory) {
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
             for (var idx in axes) {
-                var axis = axes[idx];
-                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
-                    return true;
+                if (axes.hasOwnProperty(idx)) {
+                    var axis = axes[idx];
+                    if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -191,7 +194,9 @@ define(function(require, factory) {
             if (axisIndex == null) {
                 // Find first axis
                 for (var name in axesMapOnDim) {
-                    return axesMapOnDim[name];
+                    if (axesMapOnDim.hasOwnProperty(name)) {
+                        return axesMapOnDim[name];
+                    }
                 }
             }
             return axesMapOnDim[axisIndex];
@@ -199,8 +204,97 @@ define(function(require, factory) {
     };
 
     gridProto.getCartesian = function (xAxisIndex, yAxisIndex) {
-        var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
-        return this._coordsMap[key];
+        if (xAxisIndex != null && yAxisIndex != null) {
+            var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+            return this._coordsMap[key];
+        }
+        else {
+            // When only xAxisIndex or yAxisIndex given, find its first cartesian.
+            for (var i = 0, coordList = this._coordsList; i < coordList.length; i++) {
+                if (coordList[i].getAxis('x').index === xAxisIndex
+                    || coordList[i].getAxis('y').index === yAxisIndex
+                ) {
+                    return coordList[i];
+                }
+            }
+        }
+    };
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.convertToPixel = function (ecModel, finder, value) {
+        var target = this._findConvertTarget(ecModel, finder);
+
+        return target.cartesian
+            ? target.cartesian.dataToPoint(value)
+            : target.axis
+            ? target.axis.toGlobalCoord(target.axis.dataToCoord(value))
+            : null;
+    };
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.convertFromPixel = function (ecModel, finder, value) {
+        var target = this._findConvertTarget(ecModel, finder);
+
+        return target.cartesian
+            ? target.cartesian.pointToData(value)
+            : target.axis
+            ? target.axis.coordToData(target.axis.toLocalCoord(value))
+            : null;
+    };
+
+    /**
+     * @inner
+     */
+    gridProto._findConvertTarget = function (ecModel, finder) {
+        var seriesModel = finder.seriesModel;
+        var xAxisModel = finder.xAxisModel
+            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+        var yAxisModel = finder.yAxisModel
+            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+        var gridModel = finder.gridModel;
+        var coordsList = this._coordsList;
+        var cartesian;
+        var axis;
+
+        if (seriesModel) {
+            cartesian = seriesModel.coordinateSystem;
+            zrUtil.indexOf(coordsList, cartesian) < 0 && (cartesian = null);
+        }
+        else if (xAxisModel && yAxisModel) {
+            cartesian = this.getCartesian(xAxisModel.componentIndex, yAxisModel.componentIndex);
+        }
+        else if (xAxisModel) {
+            axis = this.getAxis('x', xAxisModel.componentIndex);
+        }
+        else if (yAxisModel) {
+            axis = this.getAxis('y', yAxisModel.componentIndex);
+        }
+        // Lowest priority.
+        else if (gridModel) {
+            var grid = gridModel.coordinateSystem;
+            if (grid === this) {
+                cartesian = this._coordsList[0];
+            }
+        }
+
+        return {cartesian: cartesian, axis: axis};
+    };
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.containPoint = function (point) {
+        var coord = this._coordsList[0];
+        if (coord) {
+            return coord.containPoint(point);
+        }
     };
 
     /**
@@ -265,9 +359,9 @@ define(function(require, factory) {
                     if (axisPosition !== 'top' && axisPosition !== 'bottom') {
                         // Default bottom of X
                         axisPosition = 'bottom';
-                    }
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
+                        if (axisPositionUsed[axisPosition]) {
+                            axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
+                        }
                     }
                 }
                 else {
@@ -275,9 +369,9 @@ define(function(require, factory) {
                     if (axisPosition !== 'left' && axisPosition !== 'right') {
                         // Default left of Y
                         axisPosition = 'left';
-                    }
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
+                        if (axisPositionUsed[axisPosition]) {
+                            axisPosition = axisPosition === 'left' ? 'right' : 'left';
+                        }
                     }
                 }
                 axisPositionUsed[axisPosition] = true;
@@ -301,6 +395,9 @@ define(function(require, factory) {
                 // Inject axisModel into axis
                 axis.model = axisModel;
 
+                // Inject grid info axis
+                axis.grid = this;
+
                 // Index of axis, can be used as key
                 axis.index = idx;
 
@@ -323,12 +420,10 @@ define(function(require, factory) {
             axis.scale.setExtent(Infinity, -Infinity);
         });
         ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
-                var xAxisIndex = seriesModel.get('xAxisIndex');
-                var yAxisIndex = seriesModel.get('yAxisIndex');
-
-                var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
-                var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
+            if (isCartesian2D(seriesModel)) {
+                var axesModels = findAxesModels(seriesModel, ecModel);
+                var xAxisModel = axesModels[0];
+                var yAxisModel = axesModels[1];
 
                 if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)
                     || !isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)
@@ -336,7 +431,9 @@ define(function(require, factory) {
                     return;
                 }
 
-                var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
+                var cartesian = this.getCartesian(
+                    xAxisModel.componentIndex, yAxisModel.componentIndex
+                );
                 var data = seriesModel.getData();
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');
@@ -381,6 +478,34 @@ define(function(require, factory) {
             };
     }
 
+    var axesTypes = ['xAxis', 'yAxis'];
+    /**
+     * @inner
+     */
+    function findAxesModels(seriesModel, ecModel) {
+        return zrUtil.map(axesTypes, function (axisType) {
+            var axisModel = seriesModel.getReferringComponents(axisType)[0];
+
+            if (__DEV__) {
+                if (!axisModel) {
+                    throw new Error(axisType + ' "' + zrUtil.retrieve(
+                        seriesModel.get(axisType + 'Index'),
+                        seriesModel.get(axisType + 'Id'),
+                        0
+                    ) + '" not found');
+                }
+            }
+            return axisModel;
+        });
+    }
+
+    /**
+     * @inner
+     */
+    function isCartesian2D(seriesModel) {
+        return seriesModel.get('coordinateSystem') === 'cartesian2d';
+    }
+
     Grid.create = function (ecModel, api) {
         var grids = [];
         ecModel.eachComponent('grid', function (gridModel, idx) {
@@ -395,15 +520,35 @@ define(function(require, factory) {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('coordinateSystem') !== 'cartesian2d') {
+            if (!isCartesian2D(seriesModel)) {
                 return;
             }
-            var xAxisIndex = seriesModel.get('xAxisIndex');
-            // TODO Validate
-            var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
-            var grid = grids[xAxisModel.get('gridIndex')];
+
+            var axesModels = findAxesModels(seriesModel, ecModel);
+            var xAxisModel = axesModels[0];
+            var yAxisModel = axesModels[1];
+
+            var gridModel = xAxisModel.findGridModel();
+
+            if (__DEV__) {
+                if (!gridModel) {
+                    throw new Error(
+                        'Grid "' + zrUtil.retrieve(
+                            xAxisModel.get('gridIndex'),
+                            xAxisModel.get('gridId'),
+                            0
+                        ) + '" not found'
+                    );
+                }
+                if (xAxisModel.findGridModel() !== yAxisModel.findGridModel()) {
+                    throw new Error('xAxis and yAxis must use the same grid');
+                }
+            }
+
+            var grid = gridModel.coordinateSystem;
+
             seriesModel.coordinateSystem = grid.getCartesian(
-                xAxisIndex, seriesModel.get('yAxisIndex')
+                xAxisModel.componentIndex, yAxisModel.componentIndex
             );
         });
 

@@ -7,9 +7,10 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
+    var helper = require('./helper');
     var AxisProxy = require('./AxisProxy');
     var each = zrUtil.each;
-    var eachAxisDim = modelUtil.eachAxisDim;
+    var eachAxisDim = helper.eachAxisDim;
 
     var DataZoomModel = echarts.extendComponentModel({
 
@@ -26,10 +27,9 @@ define(function(require) {
             zlevel: 0,
             z: 4,                   // Higher than normal component (z: 2).
             orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
-            xAxisIndex: null,       // Default all horizontal category axis.
-            yAxisIndex: null,       // Default all vertical category axis.
-            angleAxisIndex: null,
-            radiusAxisIndex: null,
+            xAxisIndex: null,       // Default the first horizontal category axis.
+            yAxisIndex: null,       // Default the first vertical category axis.
+
             filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.
@@ -40,8 +40,10 @@ define(function(require) {
                                     // the filtered points when filterModel is set to 'empty', but
                                     // be connected when set to 'filter'.
 
-            throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
+            throttle: null,         // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
+                                    // If animation === true and animationDurationUpdate > 0,
+                                    // default value is 100, otherwise 20.
             start: 0,               // Start percent. 0 ~ 100
             end: 100,               // End percent. 0 ~ 100
             startValue: null,       // Start value. If startValue specified, start is ignored.
@@ -76,6 +78,11 @@ define(function(require) {
              */
             this.textStyleModel;
 
+            /**
+             * @private
+             */
+            this._autoThrottle = true;
+
             var rawOption = retrieveRaw(option);
 
             this.mergeDefaultAndTheme(option, ecModel);
@@ -105,6 +112,8 @@ define(function(require) {
             if (!env.canvasSupported) {
                 thisOption.realtime = false;
             }
+
+            this._setDefaultThrottle(rawOption);
 
             processRangeProp('start', 'startValue', rawOption, thisOption);
             processRangeProp('end', 'endValue', rawOption, thisOption);
@@ -248,7 +257,29 @@ define(function(require) {
                     if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
                         eachAxisDim(function (dimNames) {
                             var axisIndices = thisOption[dimNames.axisIndex];
+
                             var axisIndex = seriesModel.get(dimNames.axisIndex);
+                            var axisId = seriesModel.get(dimNames.axisId);
+
+                            var axisModel = seriesModel.ecModel.queryComponents({
+                                mainType: dimNames.axis,
+                                index: axisIndex,
+                                id: axisId
+                            })[0];
+
+                            if (__DEV__) {
+                                if (!axisModel) {
+                                    throw new Error(
+                                        dimNames.axis + ' "' + zrUtil.retrieve(
+                                            axisIndex,
+                                            axisId,
+                                            0
+                                        ) + '" not found'
+                                    );
+                                }
+                            }
+                            axisIndex = axisModel.componentIndex;
+
                             if (zrUtil.indexOf(axisIndices, axisIndex) < 0) {
                                 axisIndices.push(axisIndex);
                             }
@@ -290,6 +321,22 @@ define(function(require) {
                 }
             }, this);
             return is;
+        },
+
+        /**
+         * @private
+         */
+        _setDefaultThrottle: function (rawOption) {
+            // When first time user set throttle, auto throttle ends.
+            if (rawOption.hasOwnProperty('throttle')) {
+                this._autoThrottle = false;
+            }
+            if (this._autoThrottle) {
+                var globalOption = this.ecModel.option;
+                this.option.throttle =
+                    (globalOption.animation && globalOption.animationDurationUpdate > 0)
+                    ? 100 : 20;
+            }
         },
 
         /**
@@ -410,9 +457,9 @@ define(function(require) {
     function retrieveRaw(option) {
         var ret = {};
         each(
-            ['start', 'end', 'startValue', 'endValue'],
+            ['start', 'end', 'startValue', 'endValue', 'throttle'],
             function (name) {
-                ret[name] = option[name];
+                option.hasOwnProperty(name) && (ret[name] = option[name]);
             }
         );
         return ret;

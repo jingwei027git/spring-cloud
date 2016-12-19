@@ -134,7 +134,7 @@ define(function (require) {
                 group.add(itemGroup);
 
                 polyline.useStyle(
-                    zrUtil.extend(
+                    zrUtil.defaults(
                         itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
                             fill: 'none',
@@ -214,6 +214,8 @@ define(function (require) {
         remove: function () {
             this.group.removeAll();
             this._data = null;
-        }
+        },
+
+        dispose: function () {}
     });
 });

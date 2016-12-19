@@ -11,6 +11,9 @@ define(function (require) {
 
     var mathFloor = Math.floor;
     var mathCeil = Math.ceil;
+
+    var getPrecisionSafe = numberUtil.getPrecisionSafe;
+    var roundingErrorFix = numberUtil.round;
     /**
      * @alias module:echarts/coord/scale/Interval
      * @constructor
@@ -76,19 +79,24 @@ define(function (require) {
 
             if (interval) {
                 var niceExtent = this._niceExtent;
+                var precision = getPrecisionSafe(interval) + 2;
+
                 if (extent[0] < niceExtent[0]) {
                     ticks.push(extent[0]);
                 }
                 var tick = niceExtent[0];
+
                 while (tick <= niceExtent[1]) {
                     ticks.push(tick);
                     // Avoid rounding error
-                    tick = numberUtil.round(tick + interval);
+                    tick = roundingErrorFix(tick + interval, precision);
                     if (ticks.length > safeLimit) {
                         return [];
                     }
                 }
-                if (extent[1] > niceExtent[1]) {
+                // Consider this case: the last item of ticks is smaller
+                // than niceExtent[1] and niceExtent[1] === extent[1].
+                if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceExtent[1])) {
                     ticks.push(extent[1]);
                 }
             }
@@ -137,12 +145,21 @@ define(function (require) {
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
             // var niceSpan = numberUtil.nice(span, false);
-            var step = numberUtil.nice(span / splitNumber, true);
+            var step = roundingErrorFix(
+                numberUtil.nice(span / splitNumber, true),
+                Math.max(
+                    getPrecisionSafe(extent[0]),
+                    getPrecisionSafe(extent[1])
+                // extent may be [0, 1], and step should have 1 more digits.
+                // To make it safe we add 2 more digits
+                ) + 2
+            );
 
+            var precision = getPrecisionSafe(step) + 2;
             // Niced extent inside original extent
             var niceExtent = [
-                numberUtil.round(mathCeil(extent[0] / step) * step),
-                numberUtil.round(mathFloor(extent[1] / step) * step)
+                roundingErrorFix(mathCeil(extent[0] / step) * step, precision),
+                roundingErrorFix(mathFloor(extent[1] / step) * step, precision)
             ];
 
             this._interval = step;
@@ -161,9 +178,19 @@ define(function (require) {
             if (extent[0] === extent[1]) {
                 if (extent[0] !== 0) {
                     // Expand extent
-                    var expandSize = extent[0] / 2;
-                    extent[0] -= expandSize;
-                    extent[1] += expandSize;
+                    var expandSize = extent[0];
+                    // In the fowllowing case
+                    //      Axis has been fixed max 100
+                    //      Plus data are all 100 and axis extent are [100, 100].
+                    // Extend to the both side will cause expanded max is larger than fixed max.
+                    // So only expand to the smaller side.
+                    if (!fixMax) {
+                        extent[1] += expandSize / 2;
+                        extent[0] -= expandSize / 2;
+                    }
+                    else {
+                        extent[0] -= expandSize / 2;
+                    }
                 }
                 else {
                     extent[1] = 1;
@@ -182,10 +209,10 @@ define(function (require) {
             var interval = this._interval;
 
             if (!fixMin) {
-                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
+                extent[0] = roundingErrorFix(mathFloor(extent[0] / interval) * interval);
             }
             if (!fixMax) {
-                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
+                extent[1] = roundingErrorFix(mathCeil(extent[1] / interval) * interval);
             }
         }
     });

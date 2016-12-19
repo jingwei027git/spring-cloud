@@ -321,8 +321,9 @@
                         left: 10,
                         bottom: 70,
                         itemHeight: 200,
+                        hoverLinkDataSize: 100000,
                         text: ['High', 'Low'],
-                        realtime: false,
+                        // realtime: false,
                         calculable: true,
                         color: ['orangered', 'yellow', 'lightskyblue']
                     },
@@ -654,6 +655,13 @@
                             data: data4
                         }
                     ]
+                });
+
+                // Check setOption at the second time.
+                chart.setOption({
+                    visualMap: {
+                        outOfRange: {color: '#aaa'}
+                    }
                 });
             });
         </script>

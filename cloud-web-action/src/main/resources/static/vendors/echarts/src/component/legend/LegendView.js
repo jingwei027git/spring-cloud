@@ -7,8 +7,6 @@ define(function (require) {
 
     var curry = zrUtil.curry;
 
-    var LEGEND_DISABLE_COLOR = '#ccc';
-
     function dispatchSelectAction(name, api) {
         api.dispatchAction({
             type: 'legendToggleSelect',
@@ -17,19 +15,27 @@ define(function (require) {
     }
 
     function dispatchHighlightAction(seriesModel, dataName, api) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
-            type: 'highlight',
-            seriesName: seriesModel.name,
-            name: dataName
-        });
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'highlight',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
     }
 
     function dispatchDownplayAction(seriesModel, dataName, api) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
-            type: 'downplay',
-            seriesName: seriesModel.name,
-            name: dataName
-        });
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'downplay',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
     }
 
     return require('../../echarts').extendComponentView({
@@ -73,7 +79,7 @@ define(function (require) {
                 var seriesModel = ecModel.getSeriesByName(name)[0];
 
                 if (legendDrawedMap[name]) {
-                    // Series not exists
+                    // Have been drawed
                     return;
                 }
 
@@ -100,8 +106,8 @@ define(function (require) {
                     );
 
                     itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                        .on('mouseover', curry(dispatchHighlightAction, seriesModel, '', api))
-                        .on('mouseout', curry(dispatchDownplayAction, seriesModel, '', api));
+                        .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api))
+                        .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api));
 
                     legendDrawedMap[name] = true;
                 }
@@ -139,6 +145,12 @@ define(function (require) {
                         }
                     }, this);
                 }
+
+                if (__DEV__) {
+                    if (!legendDrawedMap[name]) {
+                        console.warn(name + ' series not exists. Legend data should be same with series name or data name.');
+                    }
+                }
             }, this);
 
             listComponentHelper.layout(group, legendModel, api);
@@ -154,6 +166,7 @@ define(function (require) {
         ) {
             var itemWidth = legendModel.get('itemWidth');
             var itemHeight = legendModel.get('itemHeight');
+            var inactiveColor = legendModel.get('inactiveColor');
 
             var isSelected = legendModel.isSelected(name);
             var itemGroup = new graphic.Group();
@@ -162,10 +175,13 @@ define(function (require) {
 
             var itemIcon = itemModel.get('icon');
 
+            var tooltipModel = itemModel.getModel('tooltip');
+            var legendGlobalTooltipModel = tooltipModel.parentModel;
+
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
-                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : LEGEND_DISABLE_COLOR
+                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : inactiveColor
             ));
 
             // Compose symbols
@@ -181,7 +197,7 @@ define(function (require) {
                 // Put symbol in the center
                 itemGroup.add(symbolCreator.createSymbol(
                     symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,
-                    isSelected ? color : LEGEND_DISABLE_COLOR
+                    isSelected ? color : inactiveColor
                 ));
             }
 
@@ -190,19 +206,20 @@ define(function (require) {
             var textAlign = itemAlign;
 
             var formatter = legendModel.get('formatter');
+            var content = name;
             if (typeof formatter === 'string' && formatter) {
-                name = formatter.replace('{name}', name);
+                content = formatter.replace('{name}', name != null ? name : '');
             }
             else if (typeof formatter === 'function') {
-                name = formatter(name);
+                content = formatter(name);
             }
 
             var text = new graphic.Text({
                 style: {
-                    text: name,
+                    text: content,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: isSelected ? textStyleModel.getTextColor() : LEGEND_DISABLE_COLOR,
+                    fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textVerticalAlign: 'middle'
@@ -211,14 +228,32 @@ define(function (require) {
             itemGroup.add(text);
 
             // Add a invisible rect to increase the area of mouse hover
-            itemGroup.add(new graphic.Rect({
+            var hitRect = new graphic.Rect({
                 shape: itemGroup.getBoundingRect(),
-                invisible: true
-            }));
+                invisible: true,
+                tooltip: tooltipModel.get('show') ? zrUtil.extend({
+                    content: name,
+                    // Defaul formatter
+                    formatter: legendGlobalTooltipModel.get('formatter', true) || function () {
+                        return name;
+                    },
+                    formatterParams: {
+                        componentType: 'legend',
+                        legendIndex: legendModel.componentIndex,
+                        name: name,
+                        $vars: ['name']
+                    }
+                }, tooltipModel.option) : null
+            });
+            itemGroup.add(hitRect);
 
             itemGroup.eachChild(function (child) {
-                child.silent = !selectMode;
+                child.silent = true;
             });
+
+            hitRect.silent = !selectMode;
+
+
 
             this.group.add(itemGroup);
 

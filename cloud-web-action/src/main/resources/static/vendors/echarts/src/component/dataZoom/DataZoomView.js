@@ -41,17 +41,31 @@ define(function (require) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
                 if (axisModel) {
                     axisModels.push(axisModel);
+                    var coordSysName;
+                    var axisName = dimNames.axis;
 
-                    var gridIndex = axisModel.get('gridIndex');
-                    var polarIndex = axisModel.get('polarIndex');
-
-                    if (gridIndex != null) {
-                        var coordModel = ecModel.getComponent('grid', gridIndex);
-                        save(coordModel, axisModel, cartesians, gridIndex);
+                    if (axisName === 'xAxis' || axisName === 'yAxis') {
+                        coordSysName = 'grid';
                     }
-                    else if (polarIndex != null) {
-                        var coordModel = ecModel.getComponent('polar', polarIndex);
-                        save(coordModel, axisModel, polars, polarIndex);
+                    else if (axisName === 'angleAxis' || axisName === 'radiusAxis') {
+                        coordSysName = 'polar';
+                    }
+
+                    var coordModel = coordSysName
+                        ? ecModel.queryComponents({
+                            mainType: coordSysName,
+                            index: axisModel.get(coordSysName + 'Index'),
+                            id: axisModel.get(coordSysName + 'Id')
+                        })[0]
+                        : null;
+
+                    if (coordModel != null) {
+                        save(
+                            coordModel,
+                            axisModel,
+                            coordSysName === 'grid' ? cartesians : polars,
+                            coordModel.componentIndex
+                        );
                     }
                 }
             }, this);

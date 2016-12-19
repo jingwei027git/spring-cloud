@@ -141,6 +141,7 @@ define(function (require) {
         sector.useStyle(
             zrUtil.defaults(
                 {
+                    lineJoin: 'bevel',
                     fill: visualColor
                 },
                 itemStyleModel.getModel('normal').getItemStyle()
@@ -176,7 +177,7 @@ define(function (require) {
             }, 300, 'elasticOut');
         }
         sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-        if (itemModel.get('hoverAnimation')) {
+        if (itemModel.get('hoverAnimation') && seriesModel.ifEnableAnimation()) {
             sector
                 .on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)
@@ -333,6 +334,8 @@ define(function (require) {
             this._data = data;
         },
 
+        dispose: function () {},
+
         _createClipPath: function (
             cx, cy, r, startAngle, clockwise, cb, seriesModel
         ) {
@@ -355,7 +358,22 @@ define(function (require) {
             }, seriesModel, cb);
 
             return clipPath;
+        },
+
+        /**
+         * @implement
+         */
+        containPoint: function (point, seriesModel) {
+            var data = seriesModel.getData();
+            var itemLayout = data.getItemLayout(0);
+            if (itemLayout) {
+                var dx = point[0] - itemLayout.cx;
+                var dy = point[1] - itemLayout.cy;
+                var radius = Math.sqrt(dx * dx + dy * dy);
+                return radius <= itemLayout.r && radius >= itemLayout.r0;
+            }
         }
+
     });
 
     return Pie;

@@ -7,18 +7,23 @@ define(function(require) {
     var axisModelCreator = require('../axisModelCreator');
 
     var PolarAxisModel = ComponentModel.extend({
+
         type: 'polarAxis',
+
         /**
          * @type {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
         axis: null
+
     });
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
+    zrUtil.merge(PolarAxisModel.prototype, require('../axisModelZoomMixin'));
 
     var polarAxisDefaultExtendedOption = {
         angle: {
-            polarIndex: 0,
+            // polarIndex: 0,
+            // polarId: '',
 
             startAngle: 90,
 
@@ -31,7 +36,8 @@ define(function(require) {
             }
         },
         radius: {
-            polarIndex: 0,
+            // polarIndex: 0,
+            // polarId: '',
 
             splitNumber: 5
         }

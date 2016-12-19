@@ -233,7 +233,7 @@ ParsleyValidatorRegistry.prototype = {
       priority: 512
     },
     type: {
-      validateString: function(value, type, {step = '1', base = 0} = {}) {
+      validateString: function(value, type, {step = 'any', base = 0} = {}) {
         var regex = typeRegexes[type];
         if (!regex) {
           throw new Error('validator type `' + type + '` is not supported');
@@ -247,7 +247,7 @@ ParsleyValidatorRegistry.prototype = {
             if (decimalPlaces(nb) > decimals) // Value can't have too many decimals
               return false;
             // Be careful of rounding errors by using integers.
-            var toInt = f => { return Math.round(f * Math.pow(10, decimals)); };
+            var toInt = f => Math.round(f * Math.pow(10, decimals));
             if ((toInt(nb) - toInt(base)) % toInt(step) != 0)
               return false;
           }

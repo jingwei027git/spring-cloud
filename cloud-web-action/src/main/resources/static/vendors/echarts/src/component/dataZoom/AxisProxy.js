@@ -104,10 +104,20 @@ define(function(require) {
          */
         getTargetSeriesModels: function () {
             var seriesModels = [];
+            var ecModel = this.ecModel;
 
-            this.ecModel.eachSeries(function (seriesModel) {
-                if (this._axisIndex === seriesModel.get(this._dimName + 'AxisIndex')) {
-                    seriesModels.push(seriesModel);
+            ecModel.eachSeries(function (seriesModel) {
+                var coordSysName = seriesModel.get('coordinateSystem');
+                if (coordSysName === 'cartesian2d' || coordSysName === 'polar') {
+                    var dimName = this._dimName;
+                    var axisModel = ecModel.queryComponents({
+                        mainType: dimName + 'Axis',
+                        index: seriesModel.get(dimName + 'AxisIndex'),
+                        id: seriesModel.get(dimName + 'AxisId')
+                    })[0];
+                    if (this._axisIndex === (axisModel && axisModel.componentIndex)) {
+                        seriesModels.push(seriesModel);
+                    }
                 }
             }, this);
 
@@ -145,6 +155,75 @@ define(function(require) {
         },
 
         /**
+         * Only calculate by given range and dataExtent, do not change anything.
+         *
+         * @param {Object} opt
+         * @param {number} [opt.start]
+         * @param {number} [opt.end]
+         * @param {number} [opt.startValue]
+         * @param {number} [opt.endValue]
+         * @param {Array.<number>} dataExtent
+         */
+        calculateDataWindow: function (opt, dataExtent) {
+            var axisModel = this.getAxisModel();
+            var scale = axisModel.axis.scale;
+            var percentExtent = [0, 100];
+            var percentWindow = [
+                opt.start,
+                opt.end
+            ];
+            var valueWindow = [];
+
+            // In percent range is used and axis min/max/scale is set,
+            // window should be based on min/max/0, but should not be
+            // based on the extent of filtered data.
+            dataExtent = dataExtent.slice();
+            fixExtendByAxis(dataExtent, axisModel, scale);
+
+            each(['startValue', 'endValue'], function (prop) {
+                valueWindow.push(
+                    opt[prop] != null
+                        ? scale.parse(opt[prop])
+                        : null
+                );
+            });
+
+            // Normalize bound.
+            each([0, 1], function (idx) {
+                var boundValue = valueWindow[idx];
+                var boundPercent = percentWindow[idx];
+
+                // start/end has higher priority over startValue/endValue,
+                // because start/end can be consistent among different type
+                // of axis but startValue/endValue not.
+
+                if (boundPercent != null || boundValue == null) {
+                    if (boundPercent == null) {
+                        boundPercent = percentExtent[idx];
+                    }
+                    // Use scale.parse to math round for category or time axis.
+                    boundValue = scale.parse(numberUtil.linearMap(
+                        boundPercent, percentExtent, dataExtent, true
+                    ));
+                }
+                else { // boundPercent == null && boundValue != null
+                    boundPercent = numberUtil.linearMap(
+                        boundValue, dataExtent, percentExtent, true
+                    );
+                }
+                // valueWindow[idx] = round(boundValue);
+                // percentWindow[idx] = round(boundPercent);
+                valueWindow[idx] = boundValue;
+                percentWindow[idx] = boundPercent;
+            });
+
+            return {
+                valueWindow: asc(valueWindow),
+                percentWindow: asc(percentWindow)
+            };
+        },
+
+        /**
          * Notice: reset should not be called before series.restoreData() called,
          * so it is recommanded to be called in "process stage" but not "model init
          * stage".
@@ -160,9 +239,7 @@ define(function(require) {
             var dataExtent = this._dataExtent = calculateDataExtent(
                 this._dimName, this.getTargetSeriesModels()
             );
-            var dataWindow = calculateDataWindow(
-                dataZoomModel.option, dataExtent, this
-            );
+            var dataWindow = this.calculateDataWindow(dataZoomModel.option, dataExtent);
             this._valueWindow = dataWindow.valueWindow;
             this._percentWindow = dataWindow.percentWindow;
 
@@ -250,65 +327,6 @@ define(function(require) {
         }, this);
 
         return dataExtent;
-    }
-
-    function calculateDataWindow(opt, dataExtent, axisProxy) {
-        var axisModel = axisProxy.getAxisModel();
-        var scale = axisModel.axis.scale;
-        var percentExtent = [0, 100];
-        var percentWindow = [
-            opt.start,
-            opt.end
-        ];
-        var valueWindow = [];
-
-        // In percent range is used and axis min/max/scale is set,
-        // window should be based on min/max/0, but should not be
-        // based on the extent of filtered data.
-        dataExtent = dataExtent.slice();
-        fixExtendByAxis(dataExtent, axisModel, scale);
-
-        each(['startValue', 'endValue'], function (prop) {
-            valueWindow.push(
-                opt[prop] != null
-                    ? scale.parse(opt[prop])
-                    : null
-            );
-        });
-
-        // Normalize bound.
-        each([0, 1], function (idx) {
-            var boundValue = valueWindow[idx];
-            var boundPercent = percentWindow[idx];
-
-            // start/end has higher priority over startValue/endValue,
-            // because start/end can be consistent among different type
-            // of axis but startValue/endValue not.
-
-            if (boundPercent != null || boundValue == null) {
-                if (boundPercent == null) {
-                    boundPercent = percentExtent[idx];
-                }
-                // Use scale.parse to math round for category or time axis.
-                boundValue = scale.parse(numberUtil.linearMap(
-                    boundPercent, percentExtent, dataExtent, true
-                ));
-            }
-            else { // boundPercent == null && boundValue != null
-                boundPercent = numberUtil.linearMap(
-                    boundValue, dataExtent, percentExtent, true
-                );
-            }
-            // valueWindow[idx] = round(boundValue);
-            // percentWindow[idx] = round(boundPercent);
-            valueWindow[idx] = boundValue;
-            percentWindow[idx] = boundPercent;
-        });
-
-        return {
-            valueWindow: asc(valueWindow),
-            percentWindow: asc(percentWindow)
-        };
     }
 
     function fixExtendByAxis(dataExtent, axisModel, scale) {

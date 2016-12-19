@@ -10,25 +10,34 @@ define(function(require) {
         return seriesModel.get('stack') || '__ec_stack_' + seriesModel.seriesIndex;
     }
 
+    function getAxisKey(axis) {
+        return axis.dim + axis.index;
+    }
+
     function calBarWidthAndOffset(barSeries, api) {
         // Columns info on each category axis. Key is cartesian name
         var columnsMap = {};
 
         zrUtil.each(barSeries, function (seriesModel, idx) {
+            var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
 
             var baseAxis = cartesian.getBaseAxis();
+            var axisExtent = baseAxis.getExtent();
+            var bandWidth = baseAxis.type === 'category'
+                ? baseAxis.getBandWidth()
+                : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-            var columnsOnAxis = columnsMap[baseAxis.index] || {
-                remainedWidth: baseAxis.getBandWidth(),
+            var columnsOnAxis = columnsMap[getAxisKey(baseAxis)] || {
+                bandWidth: bandWidth,
+                remainedWidth: bandWidth,
                 autoWidthCount: 0,
                 categoryGap: '20%',
                 gap: '30%',
-                axis: baseAxis,
                 stacks: {}
             };
             var stacks = columnsOnAxis.stacks;
-            columnsMap[baseAxis.index] = columnsOnAxis;
+            columnsMap[getAxisKey(baseAxis)] = columnsOnAxis;
 
             var stackId = getSeriesStackId(seriesModel);
 
@@ -40,12 +49,16 @@ define(function(require) {
                 maxWidth: 0
             };
 
-            var barWidth = seriesModel.get('barWidth');
-            var barMaxWidth = seriesModel.get('barMaxWidth');
+            var barWidth = parsePercent(
+                seriesModel.get('barWidth'), bandWidth
+            );
+            var barMaxWidth = parsePercent(
+                seriesModel.get('barMaxWidth'), bandWidth
+            );
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');
             // TODO
-            if (barWidth && ! stacks[stackId].width) {
+            if (barWidth && !stacks[stackId].width) {
                 barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 stacks[stackId].width = barWidth;
                 columnsOnAxis.remainedWidth -= barWidth;
@@ -63,8 +76,7 @@ define(function(require) {
             result[coordSysName] = {};
 
             var stacks = columnsOnAxis.stacks;
-            var baseAxis = columnsOnAxis.axis;
-            var bandWidth = baseAxis.getBandWidth();
+            var bandWidth = columnsOnAxis.bandWidth;
             var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
             var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
@@ -136,6 +148,7 @@ define(function(require) {
         );
 
         var lastStackCoords = {};
+        var lastStackCoordsOrigin = {};
 
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
 
@@ -144,7 +157,7 @@ define(function(require) {
             var baseAxis = cartesian.getBaseAxis();
 
             var stackId = getSeriesStackId(seriesModel);
-            var columnLayoutInfo = barWidthAndOffset[baseAxis.index][stackId];
+            var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
             var valueAxis = cartesian.getOtherAxis(baseAxis);
@@ -157,11 +170,13 @@ define(function(require) {
 
             var coords = cartesian.dataToPoints(data, true);
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+            lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
             data.setLayout({
                 offset: columnOffset,
                 size: columnWidth
             });
+
             data.each(valueAxis.dim, function (value, idx) {
                 // 空数据
                 if (isNaN(value)) {
@@ -169,22 +184,30 @@ define(function(require) {
                 }
                 if (!lastStackCoords[stackId][idx]) {
                     lastStackCoords[stackId][idx] = {
-                        // Positive stack
-                        p: valueAxisStart,
-                        // Negative stack
-                        n: valueAxisStart
+                        p: valueAxisStart, // Positive stack
+                        n: valueAxisStart  // Negative stack
+                    };
+                    lastStackCoordsOrigin[stackId][idx] = {
+                        p: valueAxisStart, // Positive stack
+                        n: valueAxisStart  // Negative stack
                     };
                 }
                 var sign = value >= 0 ? 'p' : 'n';
                 var coord = coords[idx];
                 var lastCoord = lastStackCoords[stackId][idx][sign];
-                var x, y, width, height;
+                var lastCoordOrigin = lastStackCoordsOrigin[stackId][idx][sign];
+                var x;
+                var y;
+                var width;
+                var height;
+
                 if (valueAxis.isHorizontal()) {
                     x = lastCoord;
                     y = coord[1] + columnOffset;
-                    width = coord[0] - lastCoord;
+                    width = coord[0] - lastCoordOrigin;
                     height = columnWidth;
 
+                    lastStackCoordsOrigin[stackId][idx][sign] += width;
                     if (Math.abs(width) < barMinHeight) {
                         width = (width < 0 ? -1 : 1) * barMinHeight;
                     }
@@ -194,7 +217,9 @@ define(function(require) {
                     x = coord[0] + columnOffset;
                     y = lastCoord;
                     width = columnWidth;
-                    height = coord[1] - lastCoord;
+                    height = coord[1] - lastCoordOrigin;
+
+                    lastStackCoordsOrigin[stackId][idx][sign] += height;
                     if (Math.abs(height) < barMinHeight) {
                         // Include zero to has a positive bar
                         height = (height <= 0 ? -1 : 1) * barMinHeight;

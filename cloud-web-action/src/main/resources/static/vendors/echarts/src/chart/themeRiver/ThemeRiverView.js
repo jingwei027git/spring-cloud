@@ -1,3 +1,7 @@
+/**
+ * @file  The file used to draw themeRiver view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     var poly = require('../line/poly');
@@ -29,7 +33,7 @@ define(function (require) {
             var rect = layoutInfo.rect;
             var boundaryGap = layoutInfo.boundaryGap;
 
-            group.position = [0, rect.y + boundaryGap[0]];
+            group.attr('position', [0, rect.y + boundaryGap[0]]);
 
             function keyGetter(item) {
                 return item.name;
@@ -148,10 +152,12 @@ define(function (require) {
 
             this._layersSeries = layerSeries;
             this._layers = newLayersGroups;
-        }
+        },
+
+        dispose: function () {}
     });
 
-    //add animation to the view
+    // add animation to the view
     function createGridClipShape(rect, seriesModel, cb) {
         var rectEl = new graphic.Rect({
             shape: {

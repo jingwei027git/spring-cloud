@@ -19,6 +19,8 @@ define(function (require) {
          */
         coordinateSystem: null,
 
+        layoutMode: 'box',
+
         init: function (option) {
             ComponentModel.prototype.init.apply(this, arguments);
 
@@ -56,11 +58,24 @@ define(function (require) {
 
             top: 'center',
 
-            // 自适应
+
             // width:,
             // height:,
             // right
             // bottom
+
+            // Aspect is width / height. Inited to be geoJson bbox aspect
+            // This parameter is used for scale this aspect
+            aspectScale: 0.75,
+
+            ///// Layout with center and size
+            // If you wan't to put map in a fixed size box with right aspect ratio
+            // This two properties may more conveninet
+            // layoutCenter: [50%, 50%]
+            // layoutSize: 100
+
+
+            silent: false,
 
             // Map type
             map: '',
@@ -129,7 +144,8 @@ define(function (require) {
                 return formatter(params);
             }
             else if (typeof formatter === 'string') {
-                return formatter.replace('{a}', params.seriesName);
+                var serName = params.seriesName;
+                return formatter.replace('{a}', serName != null ? serName : '');
             }
         },
 

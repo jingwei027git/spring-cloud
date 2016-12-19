@@ -139,14 +139,14 @@ ParsleyField.prototype = {
     $.each(groupedConstraints, (_, constraints) => {
       // Process one group of constraints at a time, we validate the constraints
       // and combine the promises together.
-      var promise = $.when(
-        ...$.map(constraints, constraint => this._validateConstraint(value, constraint))
+      var promise = ParsleyUtils.all(
+        $.map(constraints, constraint => this._validateConstraint(value, constraint))
       );
       promises.push(promise);
       if (promise.state() === 'rejected')
         return false; // Interrupt processing if a group has already failed
     });
-    return $.when.apply($, promises);
+    return ParsleyUtils.all(promises);
   },
 
   // @returns a promise
@@ -156,7 +156,7 @@ ParsleyField.prototype = {
     if (false === result)
       result = $.Deferred().reject();
     // Make sure we return a promise and that we record failures
-    return $.when(result).fail(errorMessage => {
+    return ParsleyUtils.all([result]).fail(errorMessage => {
       if (!(this.validationResult instanceof Array))
         this.validationResult = [];
       this.validationResult.push({
@@ -262,7 +262,7 @@ ParsleyField.prototype = {
   // Bind specific HTML5 constraints to be HTML5 compliant
   _bindHtml5Constraints: function () {
     // html5 required
-    if (this.$element.hasClass('required') || this.$element.attr('required'))
+    if (this.$element.attr('required'))
       this.addConstraint('required', true, undefined, true);
 
     // html5 pattern
@@ -304,7 +304,7 @@ ParsleyField.prototype = {
     // Small special case here for HTML5 number: integer validator if step attribute is undefined or an integer value, number otherwise
     if ('number' === type) {
       return this.addConstraint('type', ['number', {
-        step: this.$element.attr('step'),
+        step: this.$element.attr('step') || '1',
         base: this.$element.attr('min') || this.$element.attr('value')
       }], undefined, true);
     // Regular other HTML5 supported types

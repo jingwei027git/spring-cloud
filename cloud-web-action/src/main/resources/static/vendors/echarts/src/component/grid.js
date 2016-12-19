@@ -3,13 +3,14 @@ define(function(require) {
 
     var graphic = require('../util/graphic');
     var zrUtil = require('zrender/core/util');
+    var echarts = require('../echarts');
 
     require('../coord/cartesian/Grid');
 
     require('./axis');
 
     // Grid view
-    require('../echarts').extendComponentView({
+    echarts.extendComponentView({
 
         type: 'grid',
 
@@ -17,13 +18,22 @@ define(function(require) {
             this.group.removeAll();
             if (gridModel.get('show')) {
                 this.group.add(new graphic.Rect({
-                    shape:gridModel.coordinateSystem.getRect(),
+                    shape: gridModel.coordinateSystem.getRect(),
                     style: zrUtil.defaults({
                         fill: gridModel.get('backgroundColor')
                     }, gridModel.getItemStyle()),
-                    silent: true
+                    silent: true,
+                    z2: -1
                 }));
             }
+        }
+
+    });
+
+    echarts.registerPreprocessor(function (option) {
+        // Only create grid when need
+        if (option.xAxis && option.yAxis && !option.grid) {
+            option.grid = {};
         }
     });
 });

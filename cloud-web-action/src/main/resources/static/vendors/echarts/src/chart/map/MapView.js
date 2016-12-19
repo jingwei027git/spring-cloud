@@ -21,8 +21,8 @@ define(function (require) {
             group.removeAll();
             // Not update map if it is an roam action from self
             if (!(payload && payload.type === 'geoRoam'
-                && payload.component === 'series'
-                && payload.name === mapModel.name)) {
+                && payload.componentType === 'series'
+                && payload.seriesId === mapModel.id)) {
 
                 if (mapModel.needsDrawMap) {
                     var mapDraw = this._mapDraw || new MapDraw(api, true);
@@ -53,16 +53,21 @@ define(function (require) {
             this.group.removeAll();
         },
 
+        dispose: function () {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+        },
+
         _renderSymbols: function (mapModel, ecModel, api) {
-            var data = mapModel.getData();
+            var originalData = mapModel.originalData;
             var group = this.group;
 
-            data.each('value', function (value, idx) {
+            originalData.each('value', function (value, idx) {
                 if (isNaN(value)) {
                     return;
                 }
 
-                var layout = data.getItemLayout(idx);
+                var layout = originalData.getItemLayout(idx);
 
                 if (!layout || !layout.point) {
                     // Not exists in map
@@ -74,7 +79,12 @@ define(function (require) {
 
                 var circle = new graphic.Circle({
                     style: {
-                        fill: data.getVisual('color')
+                        // Because the special of map draw.
+                        // Which needs statistic of multiple series and draw on one map.
+                        // And each series also need a symbol with legend color
+                        //
+                        // Layout and visual are put one the different data
+                        fill: mapModel.getData().getVisual('color')
                     },
                     shape: {
                         cx: point[0] + offset * 9,
@@ -87,16 +97,19 @@ define(function (require) {
 
                 // First data on the same region
                 if (!offset) {
-                    var labelText = data.getName(idx);
+                    var fullData = mapModel.mainSeries.getData();
+                    var name = originalData.getName(idx);
+                    var labelText = name;
+                    var fullIndex = fullData.indexOfName(name);
 
-                    var itemModel = data.getItemModel(idx);
+                    var itemModel = originalData.getItemModel(idx);
                     var labelModel = itemModel.getModel('label.normal');
                     var hoverLabelModel = itemModel.getModel('label.emphasis');
 
                     var textStyleModel = labelModel.getModel('textStyle');
                     var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
 
-                    var polygonGroups = data.getItemGraphicEl(idx);
+                    var polygonGroups = fullData.getItemGraphicEl(fullIndex);
                     circle.setStyle({
                         textPosition: 'bottom'
                     });

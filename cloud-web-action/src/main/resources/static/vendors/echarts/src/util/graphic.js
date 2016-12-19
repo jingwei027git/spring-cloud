@@ -10,7 +10,6 @@ define(function(require) {
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
-    var Gradient = require('zrender/graphic/Gradient');
 
     var graphic = {};
 
@@ -200,7 +199,7 @@ define(function(require) {
     }
 
     function liftColor(color) {
-        return color instanceof Gradient ? color : colorTool.lift(color, -0.1);
+        return typeof color === 'string' ? colorTool.lift(color, -0.1) : color;
     }
 
     /**
@@ -241,8 +240,13 @@ define(function(require) {
 
         cacheElementStl(el);
 
-        el.setStyle(el.__hoverStl);
-        el.z2 += 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.addHover(el, el.__hoverStl);
+        }
+        else {
+            el.setStyle(el.__hoverStl);
+            el.z2 += 1;
+        }
 
         el.__isHover = true;
     }
@@ -256,8 +260,13 @@ define(function(require) {
         }
 
         var normalStl = el.__normalStl;
-        normalStl && el.setStyle(normalStl);
-        el.z2 -= 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.removeHover(el);
+        }
+        else {
+            normalStl && el.setStyle(normalStl);
+            el.z2 -= 1;
+        }
 
         el.__isHover = false;
     }
@@ -302,7 +311,11 @@ define(function(require) {
     /**
      * @inner
      */
-    function onElementMouseOver() {
+    function onElementMouseOver(e) {
+        if (this.__hoverSilentOnTouch && e.zrByTouch) {
+            return;
+        }
+
         // Only if element is not in emphasis status
         !this.__isEmphasis && doEnterHover(this);
     }
@@ -310,7 +323,11 @@ define(function(require) {
     /**
      * @inner
      */
-    function onElementMouseOut() {
+    function onElementMouseOut(e) {
+        if (this.__hoverSilentOnTouch && e.zrByTouch) {
+            return;
+        }
+
         // Only if element is not in emphasis status
         !this.__isEmphasis && doLeaveHover(this);
     }
@@ -335,8 +352,21 @@ define(function(require) {
      * Set hover style of element
      * @param {module:zrender/Element} el
      * @param {Object} [hoverStyle]
+     * @param {Object} [opt]
+     * @param {boolean} [opt.hoverSilentOnTouch=false]
+     *        In touch device, mouseover event will be trigger on touchstart event
+     *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
+     *        conviniently use hoverStyle when tap on touch screen without additional
+     *        code for compatibility.
+     *        But if the chart/component has select feature, which usually also use
+     *        hoverStyle, there might be conflict between 'select-highlight' and
+     *        'hover-highlight' especially when roam is enabled (see geo for example).
+     *        In this case, hoverSilentOnTouch should be used to disable hover-highlight
+     *        on touch device.
      */
-    graphic.setHoverStyle = function (el, hoverStyle) {
+    graphic.setHoverStyle = function (el, hoverStyle, opt) {
+        el.__hoverSilentOnTouch = opt && opt.hoverSilentOnTouch;
+
         el.type === 'group'
             ? el.traverse(function (child) {
                 if (child.type !== 'group') {
@@ -344,7 +374,8 @@ define(function(require) {
                 }
             })
             : setElementHoverStl(el, hoverStyle);
-        // Remove previous bound handlers
+
+        // Duplicated function will be auto-ignored, see Eventful.js.
         el.on('mouseover', onElementMouseOver)
           .on('mouseout', onElementMouseOut);
 
@@ -376,21 +407,33 @@ define(function(require) {
             cb = dataIndex;
             dataIndex = null;
         }
+        var animationEnabled = animatableModel
+            && (
+                animatableModel.ifEnableAnimation
+                ? animatableModel.ifEnableAnimation()
+                // Directly use animation property
+                : animatableModel.getShallow('animation')
+            );
 
-        var postfix = isUpdate ? 'Update' : '';
-        var duration = animatableModel
-            && animatableModel.getShallow('animationDuration' + postfix);
-        var animationEasing = animatableModel
-            && animatableModel.getShallow('animationEasing' + postfix);
-        var animationDelay = animatableModel
-            && animatableModel.getShallow('animationDelay' + postfix);
-        if (typeof animationDelay === 'function') {
-            animationDelay = animationDelay(dataIndex);
+        if (animationEnabled) {
+            var postfix = isUpdate ? 'Update' : '';
+            var duration = animatableModel
+                && animatableModel.getShallow('animationDuration' + postfix);
+            var animationEasing = animatableModel
+                && animatableModel.getShallow('animationEasing' + postfix);
+            var animationDelay = animatableModel
+                && animatableModel.getShallow('animationDelay' + postfix);
+            if (typeof animationDelay === 'function') {
+                animationDelay = animationDelay(dataIndex);
+            }
+            duration > 0
+                ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
+                : (el.attr(props), cb && cb());
         }
-
-        animatableModel && animatableModel.getShallow('animation')
-            ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
-            : (el.attr(props), cb && cb());
+        else {
+            el.attr(props);
+            cb && cb();
+        }
     }
     /**
      * Update graphic element properties with or without animation according to the configuration in series
@@ -408,16 +451,21 @@ define(function(require) {
      *         position: [100, 100]
      *     }, seriesModel, function () { console.log('Animation done!'); });
      */
-    graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
+    graphic.updateProps = function (el, props, animatableModel, dataIndex, cb) {
+        animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
+    };
 
     /**
      * Init graphic element properties with or without animation according to the configuration in series
      * @param {module:zrender/Element} el
      * @param {Object} props
      * @param {module:echarts/model/Model} [animatableModel]
+     * @param {number} [dataIndex]
      * @param {Function} cb
      */
-    graphic.initProps = zrUtil.curry(animateOrSetProps, false);
+    graphic.initProps = function (el, props, animatableModel, dataIndex, cb) {
+        animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
+    };
 
     /**
      * Get transform matrix of target (param target),
@@ -475,6 +523,52 @@ define(function(require) {
         return Math.abs(vertex[0]) > Math.abs(vertex[1])
             ? (vertex[0] > 0 ? 'right' : 'left')
             : (vertex[1] > 0 ? 'bottom' : 'top');
+    };
+
+    /**
+     * Apply group transition animation from g1 to g2
+     */
+    graphic.groupTransition = function (g1, g2, animatableModel, cb) {
+        if (!g1 || !g2) {
+            return;
+        }
+
+        function getElMap(g) {
+            var elMap = {};
+            g.traverse(function (el) {
+                if (!el.isGroup && el.anid) {
+                    elMap[el.anid] = el;
+                }
+            });
+            return elMap;
+        }
+        function getAnimatableProps(el) {
+            var obj = {
+                position: vector.clone(el.position),
+                rotation: el.rotation
+            };
+            if (el.shape) {
+                obj.shape = zrUtil.extend({}, el.shape);
+            }
+            return obj;
+        }
+        var elMap1 = getElMap(g1);
+
+        g2.traverse(function (el) {
+            if (!el.isGroup && el.anid) {
+                var oldEl = elMap1[el.anid];
+                if (oldEl) {
+                    var newProp = getAnimatableProps(el);
+                    el.attr(getAnimatableProps(oldEl));
+                    graphic.updateProps(el, newProp, animatableModel, el.dataIndex);
+                }
+                // else {
+                //     if (el.previousProps) {
+                //         graphic.updateProps
+                //     }
+                // }
+            }
+        });
     };
 
     return graphic;
